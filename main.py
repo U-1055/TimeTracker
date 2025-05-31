@@ -1,4 +1,4 @@
-from tkinter import Frame, Tk, BOTH, N, S, W, E, NORMAL, DISABLED
+from tkinter import Frame, Tk, BOTH, N, S, W, E, NORMAL, DISABLED, Label
 from customtkinter import CTkComboBox, CTkButton
 import json
 import datetime
@@ -6,12 +6,13 @@ from threading import Thread
 
 class Window:
     def __init__(self):
-        PATH = ''
+        PATH = 'data'
         self.place_widgets()
 
     def place_widgets(self):
         wdg_frame = Frame(master)
         wdg_frame.pack(anchor=W)
+
         wdg_deeds_today = ComboBox(wdg_frame)
         wdg_deeds_today.grid(row=0, column=0, columnspan=2, sticky=W+E)
 
@@ -41,8 +42,7 @@ class ComboBox(CTkComboBox):
         super().__init__(master=master, state='readonly')
         self.configure(values=[])
         self.bind('<Enter>', self.to_adding_mode)
-        self.deeds_list = DeedsList(master)
-        self.deeds_list.pack
+
     def to_adding_mode(self, event):
 
         self.binding = self.bind('<ButtonPress-1>', self.add_value)
@@ -63,10 +63,23 @@ class ComboBox(CTkComboBox):
 
 class DeedsList(Frame):
     def __init__(self, master):
-        super().__init__(master)
+        super().__init__(master, bg='Gray')
+        self.free_row = 1
+        self.create_columns()
 
-    def add_deed(self):
-        pass
+    def create_columns(self):
+
+        for number, element in enumerate(('Номер', 'Дело', 'Статус', 'Время')):
+            column = Label(self, text=f'-      {element}      -')
+            column.grid(row=0, column=number)
+
+    def add_deed(self, deed: str, state: str, time: str = '00.00.00'):
+        wdg_num = Label(self, text=f'{self.free_row}.')
+        wdg_num.grid(row=self.free_row, column=0)
+
+        for num, content in enumerate((deed, state, time)):
+            wdg = Label(self, text=content)
+            wdg.grid(row=self.free_row, column=num + 1)
 
 if __name__ == '__main__':
 
@@ -77,6 +90,10 @@ if __name__ == '__main__':
 
     master = Frame(root)
     master.pack(fill=BOTH, expand=True)
+
+    deeds_list = DeedsList(master)
+    deeds_list.pack(anchor=E)
+
     Window()
 
     root.mainloop()
