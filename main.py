@@ -1,18 +1,17 @@
+import time
 from tkinter import Frame, Tk, BOTH, W, E, Y, N, S
 from customtkinter import CTkButton, CTkComboBox
 
-from widgets import DeedsList, StopWatch, COLOR3, DeedsPanel, Menu
-from data_processing import APIProcessor
+from widgets import StopWatchSelector, COLOR3, DeedsPanel, Menu, ComboBox
+from data_processing import APIProcessor, Saver
 
 class Window:
     def __init__(self):
         PATH = 'data'
-        self.day_data = ''
+        self.saver = Saver()
+        self.day_data = self.get_data()
         self.buttons = ((master), (master))
-        try:
-            self.get_data()
-        except ... : #ToDo: добавить конкретную ошибку после начала работы с API
-            print('Ошибка при получении данных из Google Calendar, попробуйте ещё раз')
+
         self.deeds_panel = DeedsPanel(master)
         self.place_widgets()
         for deed in self.day_data:
@@ -32,19 +31,19 @@ class Window:
         wdg_frame = Frame(master, bg='Gray') # основная панель
         wdg_frame.grid(row=0, column=1, sticky=W + E + N + S)
 
-
-        wdg_deeds_selector = CTkComboBox(wdg_frame) #ToDo: продумать случай изменения плана
-
-        wdg_stop_watch = StopWatch(wdg_frame) # секундомер
-        wdg_stop_watch.grid(row=1, column=0, columnspan=2, sticky=W+E)
+        self.wdg_stop_watch = StopWatchSelector(wdg_frame, tuple(deed[0] for deed in self.day_data)) # секундомер
+        self.wdg_stop_watch.grid(row=0, column=0, columnspan=2, sticky=W+E)
 
         # панель с планом
         self.deeds_panel.grid(row=0, column=3, sticky=W + E + N + S)
+        test_btn = CTkButton(wdg_frame, command=self.save)
+        test_btn.grid(row=1, column=3)
 
-    def get_data(self):
+    def save(self):
+        self.saver.save(self.wdg_stop_watch.get_current_data())
 
-        data_processor = APIProcessor()
-        self.day_data = data_processor.get_data()
+    def get_data(self) -> tuple[tuple, tuple]:
+        return self.saver.get_data()
 
 class GraphicWindow:
     """Окно с графиком"""
@@ -63,6 +62,5 @@ if __name__ == '__main__':
     master = Frame(root)
     master.pack(fill=BOTH, expand=True)
 
-    Window()
-
+    window = Window()
     root.mainloop()

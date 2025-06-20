@@ -1,7 +1,6 @@
 from tkinter import Frame, Label, NORMAL, END, W, E, S, N, TOP
 from customtkinter import CTkEntry, CTkButton, CTkComboBox
 
-import datetime
 import time
 from threading import Thread
 
@@ -10,37 +9,34 @@ COLOR1 = 'White'
 COLOR2 = 'Gray'
 COLOR3 = '#DEDEDE'
 COMMON_FONT = ('Arial', 12)
+
+
+START = 'Старт'
+STOP = 'Приостановить'
+CBOX_DEFAULT = 'Выберите дело'
 class ComboBox(CTkComboBox):
-    def __init__(self, parent):
-        super().__init__(master=parent, state='readonly')
-        self.configure(values=[], fg_color=COLOR3)
-        self.bind('<Enter>', self.to_adding_mode)
-        self.parent = parent
-    def to_adding_mode(self, event):
+    """Обёртка для CTKCombobox. Обрабатывает список входных значений (values)"""
+    def __init__(self, parent, values: tuple):
+        super().__init__(master=parent, state='readonly', font=COMMON_FONT, dropdown_font=COMMON_FONT, fg_color=COLOR1)
+        self.set(CBOX_DEFAULT)
+        self.configure(values=self.process_values(values))
 
-        self.binding = self.bind('<ButtonPress-1>', self.add_value)
-        self.bind('<Leave>', self.to_normal_mode)
-        self.configure(state=NORMAL, fg_color=COLOR1)
-        self.focus_get()
+    def process_values(self, values: tuple) -> list:
+        """Удаляет из кортежа входящих значений дубликаты элементов. Пример: ("name", "name") -> ["name"] """
+        output_values = []
+        for value in values:
+            if value in output_values:
+                continue
+            output_values.append(value)
 
-    def to_normal_mode(self, event):
-        self.configure(state='readonly', fg_color=COLOR3)
-        self.unbind(self.binding)  # Невозможен случай, при котором binding не будет объявлен к этому моменту
-        self.bind('<Enter>', self.to_adding_mode)
+        return output_values
 
-    def add_value(self, event):
-        value = self.get()
-        values = self.cget('values')
-        if not (value == '' or value in values):
-            values.append(value)
-            self.configure(values=values)
-
-    def validate(self, string: str):
-
-        if len(string) > 26:
-            return False
+    def load(self, current_deed: str, values):
+        """"""
+        if current_deed in self.cget('values'):
+            self.set(current_deed)
         else:
-            return True
+            self.set(CBOX_DEFAULT)
 
 class DeedsList(Frame):
     def __init__(self, parent, bg: str):
@@ -65,69 +61,121 @@ class DeedsList(Frame):
 
         self.free_row += 1
 
-class StopWatch(Frame):
-    def __init__(self, parent): # Переделать секундомер
+class StopWatchSelector(Frame):
+    def __init__(self, parent, values: tuple):
         super().__init__(master=parent)
+        self.values = values
+        self.data = {
+            "current_deed": '',
+            "time_main": '',
+            "time_deed": ''
+        }
 
         self.place_widgets()
+        self.current_deed = self.wdg_selector.get()
         self.counting = False # Идёт ли отсчёт
         self.running = False # Запущен ли поток
 
     def place_widgets(self):
 
-        self.wdg_stopwatch = CTkEntry(self)
-        self.wdg_stopwatch.grid(row=0, column=0, sticky=W + E)
-        self.wdg_stopwatch.insert(0, '00:00:00')
-        self.wdg_stopwatch.configure(state='readonly')
+        self.columnconfigure(0, weight=2)
+        self.columnconfigure(1, weight=1)
 
-        self.wdg_btn_control = CTkButton(self, text='Начать отсчёт', command=self.start)
-        self.wdg_btn_control.grid(row=1, column=0, sticky=W + E)
+        self.wdg_selector = ComboBox(self, self.values)
+        self.wdg_selector.grid(row=0, column=0, columnspan=2, sticky=W + E)
+        self.wdg_selector.bind('<<ComboboxSelected>>', self.change_deed) #ToDo: разобраться с работой бинда
 
-    def save(self):
-        pass
+        self.wdg_main_swatch = CTkEntry(self)
+        self.wdg_main_swatch.grid(row=1, column=0, sticky=W + E)
+        self.wdg_main_swatch.insert(0, '00:00:00')
+        self.wdg_main_swatch.configure(state='readonly')
 
-    def load(self):
-        pass
+        self.wdg_deed_swatch = CTkEntry(self)
+        self.wdg_deed_swatch.grid(row=1, column=1, sticky=W)
+        self.wdg_deed_swatch.insert(0, '00:00:00')
+        self.wdg_deed_swatch.configure(state='readonly')
+
+        start_btn = CTkButton(self, text=START, command=self.start)
+        start_btn.grid(row=2, column=0)
+
+        stop_btn = CTkButton(self, text=STOP)
+        stop_btn.grid(row=2, column=1)
 
     def start(self):
-        self.wdg_btn_control.configure(text='Приостановить', command=self.stop)
-        self.counting = True
+        thread_1 = Thread(target=self.count_time, args=[self.wdg_main_swatch])
+        thread_1.start()
+        thread_2 = Thread(target=self.count_time, args=[self.wdg_deed_swatch])
+        thread_2.start()
 
-        if not self.running:
-            self.running = True
-            self.starting_point = datetime.datetime.now() # Точка отсчёта
-            thread_count = Thread(target=self.count_time, daemon=True)
-            thread_count.start()
 
     def stop(self):
-        self.wdg_btn_control.configure(text='Начать отсчёт', command=self.start)
-        self.counting = False
-        if self.running:
-            self.running = False
+        pass
 
-    def count_time(self):
-        time_data = self.wdg_stopwatch.get().split(':')
-        secs, minutes, hours = int(time_data[0]), int(time_data[1]), int(time_data[2].split('.')[0])
-        starting_point = datetime.datetime.strptime(f'{hours}:{minutes}:{secs}', '%H:%M:%S')
-        while self.counting:
+    def load(self, data: list[str, str]):
+        """Вводит в секундомеры значения из временного JSON'а"""
+        self.wdg_main_swatch.delete(0, END)
+        self.wdg_main_swatch.insert(0, data[0])
 
-            if secs == 60:
-                secs = 0
-                minutes += 1
-            if minutes == 60:
-                minutes = 0
-                hours += 1
+    def get_data(self) -> dict:
+        """Возвращает данные о текущем деле в виде: {"name": название, "time": время в секундах}"""
+        return {"name": self.current_deed, "time": self.wdg_main_swatch.get()}
 
-            time_now = datetime.datetime.time(datetime.datetime.now())
-            time_now = str(time_now).split('.')[1]
+    def change_deed(self, event):
+        """Вызывается при смене дела в CTkCombobox. Меняет содержимое словаря, который раз в 5 минут запрашивается Window"""
+        deed = self.wdg_selector.get()
+        if deed == CBOX_DEFAULT:
+            self.wdg_main_swatch.configure(state='disable')
+            self.wdg_deed_swatch.configure(state='disable')
+        else:
+            self.wdg_main_swatch.configure(state='normal')
+            self.wdg_deed_swatch.configure(state='normal')
+            print('A')
 
-            self.wdg_stopwatch.configure(state=NORMAL)
-            self.wdg_stopwatch.delete(0, END)
-            self.wdg_stopwatch.insert(0, str(starting_point - datetime.datetime.strptime(time_now, '%H:%M:%S')))
-            self.wdg_stopwatch.configure(state='readonly')
 
+    def get_current_data(self) -> dict:
+        """Предназначено для вызова из Window. Возвращает словарь с актуальными данными для заноса во временный JSON"""
+        self.data['current_deed'] = self.current_deed
+        self.data['time_main'] = self.wdg_main_swatch.get()
+        self.data['time_deed'] = self.wdg_deed_swatch.get()
+
+        return self.data
+
+    def time_to_sec(self, time_f: str) -> int:
+        """Переводит время в секунды из формата hh:mm:ss"""
+        time_res = time_f.split(':')
+        for i, value in enumerate(time_res): # проверка на незначащие нули
+            if value[0] == '0':
+                time_res[i] = value[1]
+            time_res[i] = int(time_res[i])
+
+        return time_res[0] * 3600 + time_res[1] * 60 + time_res[2]
+
+    def count_time(self, widget):
+        secs = self.time_to_sec(widget.get())
+        while True:
             time.sleep(1)
+
             secs += 1
+            minutes = str((secs // 60) % 60).rjust(2, '0')
+            hours = str(secs // 3600).rjust(2, '0')
+
+            widget.configure(state=NORMAL)
+            widget.delete(0, END)
+            widget.insert(1, f'{hours}:{minutes}:{str(secs % 60).rjust(2, '0')}')
+            widget.configure(state='readonly')
+
+    def get_deed(self) -> str:
+        return self.wdg_main_swatch.get()
+
+    def get_main(self) -> str:
+        return self.wdg_deed_swatch.get()
+
+    def set_main(self, stime: str):
+        self.wdg_main_swatch.insert(0, stime)
+
+    def set_deed(self, stime: str):
+        self.wdg_deed_swatch.insert(0, stime)
+
 
 class DeedsPanel(Frame):
     def __init__(self, parent):
