@@ -4,7 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Сделано:                       1) Панель плана             2) Адаптивность             3) Пересмотрена структура трекера (см. ТЖ)              4) Заглушки на места обработчика данных с API и окно графиков">
+    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Сделано:&#10;1) Продумана система сохранения&#10;2) Переделаны StopWatch и Combobox&#10;3) Начата система сохранения: создание JSON'ов при запуске и сохранение из StopWatch">
+      <change afterPath="$PROJECT_DIR$/base.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
@@ -52,6 +53,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "ASKED_ADD_EXTERNAL_FILES": "true",
+    "Python.base.executor": "Debug",
     "Python.data_processing.executor": "Run",
     "Python.main.executor": "Run",
     "Python.widgets.executor": "Debug",
@@ -99,13 +101,22 @@
       <option name="project" value="LOCAL" />
       <updated>1750334988139</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Сделано:&#10;1) Продумана система сохранения&#10;2) Переделаны StopWatch и Combobox&#10;3) Начата система сохранения: создание JSON'ов при запуске и сохранение из StopWatch">
+      <option name="closed" value="true" />
+      <created>1750420028956</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1750420028956</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Делается база" />
     <MESSAGE value="Делался секундомер" />
     <MESSAGE value="Сделано:                       1) Панель плана             2) Адаптивность             3) Пересмотрена структура трекера (см. ТЖ)              4) Заглушки на места обработчика данных с API и окно графиков" />
-    <option name="LAST_COMMIT_MESSAGE" value="Сделано:                       1) Панель плана             2) Адаптивность             3) Пересмотрена структура трекера (см. ТЖ)              4) Заглушки на места обработчика данных с API и окно графиков" />
+    <MESSAGE value="Сделано:&#10;1) Продумана система сохранения&#10;2) Переделаны StopWatch и Combobox&#10;3) Начата система сохранения: создание JSON'ов при запуске и сохранение из StopWatch" />
+    <option name="LAST_COMMIT_MESSAGE" value="Сделано:&#10;1) Продумана система сохранения&#10;2) Переделаны StopWatch и Combobox&#10;3) Начата система сохранения: создание JSON'ов при запуске и сохранение из StopWatch" />
   </component>
 </project>

@@ -1,21 +1,38 @@
 import time
-from tkinter import Frame, Tk, BOTH, W, E, Y, N, S
-from customtkinter import CTkButton, CTkComboBox
+from tkinter import Frame, Tk, BOTH, W, E, N, S
+from customtkinter import CTkButton
+from threading import Thread
 
-from widgets import StopWatchSelector, COLOR3, DeedsPanel, Menu, ComboBox
-from data_processing import APIProcessor, Saver
+from widgets import StopWatchSelector, DeedsPanel, Menu
+from data_processing import Saver
+from base import DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME
+
 
 class Window:
     def __init__(self):
-        PATH = 'data'
+
         self.saver = Saver()
+        self.saver.create_jsons()
         self.day_data = self.get_data()
-        self.buttons = ((master), (master))
+        self.buttons = (master, master)
 
         self.deeds_panel = DeedsPanel(master)
         self.place_widgets()
-        for deed in self.day_data:
-            self.deeds_panel.add_deed(deed) # self.day_data будет словарём после отработки функции self.get_data()
+
+        for num, deed in enumerate(self.day_data):
+            if num % 2 == 0:
+                color = DEED_COLOR2
+            else:
+                color = DEED_COLOR1
+
+            self.deeds_panel.add_deed(deed, color) # self.day_data будет словарём после отработки функции self.get_data()
+
+        self.saving_thread = Thread(target=self.saving_cycle, daemon=True)
+        self.saving_thread.start()
+
+        if self.saver.in_process():  # Если день не закончен
+            if self.saver.compare_plans():
+                self.wdg_stop_watch.load_deed(self.saver.get_temp_json())  # Загружает дело из temp_json в StopWatchSelector
 
     def place_widgets(self):
         master.columnconfigure(0, weight=1)
@@ -31,7 +48,7 @@ class Window:
         wdg_frame = Frame(master, bg='Gray') # основная панель
         wdg_frame.grid(row=0, column=1, sticky=W + E + N + S)
 
-        self.wdg_stop_watch = StopWatchSelector(wdg_frame, tuple(deed[0] for deed in self.day_data)) # секундомер
+        self.wdg_stop_watch = StopWatchSelector(wdg_frame, tuple(deed[0] for deed in self.day_data), self.saver.get_deed) # секундомер
         self.wdg_stop_watch.grid(row=0, column=0, columnspan=2, sticky=W+E)
 
         # панель с планом
@@ -45,11 +62,20 @@ class Window:
     def get_data(self) -> tuple[tuple, tuple]:
         return self.saver.get_data()
 
+    def finish_day(self):
+        """Вызывается при завершении дня"""
+        self.saving_thread.join()
+        self.save()
+
+    def saving_cycle(self):
+        while True:
+            time.sleep(SAVE_CYCLE_TIME)
+            self.save()
+
 class GraphicWindow:
     """Окно с графиком"""
     def __init__(self):
         pass
-
 
 
 if __name__ == '__main__':

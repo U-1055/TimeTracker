@@ -1,23 +1,17 @@
 from tkinter import Frame, Label, NORMAL, END, W, E, S, N, TOP
-from customtkinter import CTkEntry, CTkButton, CTkComboBox
+from tkinter.ttk import Combobox
+from customtkinter import CTkEntry, CTkButton
 
 import time
 from threading import Thread
 
-#Константы цветов; импортируются в main.py
-COLOR1 = 'White'
-COLOR2 = 'Gray'
-COLOR3 = '#DEDEDE'
-COMMON_FONT = ('Arial', 12)
+from base import (COLOR1, COLOR3, COMMON_FONT, DAY_ROWS, CBOX_DEFAULT, START, STOP, COMMON_FONT_COLOR, CURRENT_DEED,
+                  TIME_MAIN, TIME_DEED, time_to_sec) #ToDo: перевести на константы
 
-
-START = 'Старт'
-STOP = 'Приостановить'
-CBOX_DEFAULT = 'Выберите дело'
-class ComboBox(CTkComboBox):
+class ComboBox(Combobox):
     """Обёртка для CTKCombobox. Обрабатывает список входных значений (values)"""
-    def __init__(self, parent, values: tuple):
-        super().__init__(master=parent, state='readonly', font=COMMON_FONT, dropdown_font=COMMON_FONT, fg_color=COLOR1)
+    def __init__(self, parent, values: tuple, command):
+        super().__init__(master=parent, state='readonly')
         self.set(CBOX_DEFAULT)
         self.configure(values=self.process_values(values))
 
@@ -38,32 +32,10 @@ class ComboBox(CTkComboBox):
         else:
             self.set(CBOX_DEFAULT)
 
-class DeedsList(Frame):
-    def __init__(self, parent, bg: str):
-        self.bg = bg
-        super().__init__(parent, bg=bg)
-        self.free_row = 1
-        self.create_columns()
-
-    def create_columns(self):
-
-        for number, element in enumerate(('Номер', 'Дело', 'Статус', 'Время')):
-            column = Label(self, text=f'{element}', bg=self.bg)
-            column.grid(row=0, column=number)
-
-    def add_deed(self, deed: str, state: str, dtime: str = '00.00.00'):
-        wdg_num = Label(self, text=f'{self.free_row}.', bg=self.bg)
-        wdg_num.grid(row=self.free_row, column=0)
-
-        for num, content in enumerate((deed, state, dtime)):
-            wdg = Label(self, text=content, bg=self.bg)
-            wdg.grid(row=self.free_row, column=num + 1)
-
-        self.free_row += 1
-
 class StopWatchSelector(Frame):
-    def __init__(self, parent, values: tuple):
+    def __init__(self, parent, values: tuple, deed_request):
         super().__init__(master=parent)
+        self.deed_request = deed_request
         self.values = values
         self.data = {
             "current_deed": '',
@@ -81,9 +53,9 @@ class StopWatchSelector(Frame):
         self.columnconfigure(0, weight=2)
         self.columnconfigure(1, weight=1)
 
-        self.wdg_selector = ComboBox(self, self.values)
+        self.wdg_selector = ComboBox(self, self.values, command=lambda a: self.change_deed)  # ToDo: Разобраться с лямбдами
         self.wdg_selector.grid(row=0, column=0, columnspan=2, sticky=W + E)
-        self.wdg_selector.bind('<<ComboboxSelected>>', self.change_deed) #ToDo: разобраться с работой бинда
+        self.wdg_selector.bind('<<ComboboxSelected>>', self.change_deed) #ToDo: написать изменение состояния кнопок при выборе CBOX_DEFAULT
 
         self.wdg_main_swatch = CTkEntry(self)
         self.wdg_main_swatch.grid(row=1, column=0, sticky=W + E)
@@ -111,47 +83,58 @@ class StopWatchSelector(Frame):
     def stop(self):
         pass
 
-    def load(self, data: list[str, str]):
-        """Вводит в секундомеры значения из временного JSON'а"""
-        self.wdg_main_swatch.delete(0, END)
-        self.wdg_main_swatch.insert(0, data[0])
-
     def get_data(self) -> dict:
         """Возвращает данные о текущем деле в виде: {"name": название, "time": время в секундах}"""
         return {"name": self.current_deed, "time": self.wdg_main_swatch.get()}
 
+    def sw_insert(self, widget, text: str): #ToDo: перевести все вводы на sw_insert
+        widget.configure(state=NORMAL)
+
+        widget.delete(0, END)
+        widget.insert(0, text)
+
+        widget.configure(state='readonly')
+
+    def load_deed(self, deed_data: dict):
+        """Вводит нужные значения в Combobox и секундомеры при запуске с созданным temp_json"""
+        self.wdg_selector.set(deed_data["current_deed"])
+        self.sw_insert(self.wdg_main_swatch, deed_data[TIME_MAIN])
+        self.sw_insert(self.wdg_deed_swatch, deed_data[TIME_DEED])
+
     def change_deed(self, event):
-        """Вызывается при смене дела в CTkCombobox. Меняет содержимое словаря, который раз в 5 минут запрашивается Window"""
+        """Вызывается при смене дела в CTkCombobox. Изменяет состояние кнопок, меняет current_deed, вводит в секундомер дела
+           значение из основного JSON'a"""
         deed = self.wdg_selector.get()
+
         if deed == CBOX_DEFAULT:
             self.wdg_main_swatch.configure(state='disable')
             self.wdg_deed_swatch.configure(state='disable')
         else:
             self.wdg_main_swatch.configure(state='normal')
             self.wdg_deed_swatch.configure(state='normal')
-            print('A')
 
+        self.current_deed = self.wdg_selector.get()
+
+        plan_data = self.deed_request(deed)
+
+        self.sw_insert(self.wdg_deed_swatch, plan_data)
+
+    def clear_stopwatches(self):
+        self.stop()
+
+        self.sw_insert(self.wdg_main_swatch, '00:00:00')
+        self.sw_insert(self.wdg_deed_swatch, '00:00:00')
 
     def get_current_data(self) -> dict:
-        """Предназначено для вызова из Window. Возвращает словарь с актуальными данными для заноса во временный JSON"""
+        """Предназначено для вызова из Window. Возвращает словарь с актуальными данными для записи во временный JSON"""
         self.data['current_deed'] = self.current_deed
         self.data['time_main'] = self.wdg_main_swatch.get()
         self.data['time_deed'] = self.wdg_deed_swatch.get()
 
         return self.data
 
-    def time_to_sec(self, time_f: str) -> int:
-        """Переводит время в секунды из формата hh:mm:ss"""
-        time_res = time_f.split(':')
-        for i, value in enumerate(time_res): # проверка на незначащие нули
-            if value[0] == '0':
-                time_res[i] = value[1]
-            time_res[i] = int(time_res[i])
-
-        return time_res[0] * 3600 + time_res[1] * 60 + time_res[2]
-
     def count_time(self, widget):
-        secs = self.time_to_sec(widget.get())
+        secs = time_to_sec(widget.get())
         while True:
             time.sleep(1)
 
@@ -195,7 +178,7 @@ class DeedsPanel(Frame):
 
     def mark_panel(self):
 
-        for i in range(97):
+        for i in range(DAY_ROWS):
             self.rowconfigure(i, weight=1)
             if i % 4 == 0:
                 bg = "Black"
@@ -204,19 +187,17 @@ class DeedsPanel(Frame):
             mark = Frame(self, bg=bg)
             mark.grid(row=i, column=1, sticky=W + E)
 
-    def add_deed(self, deeds: tuple[str, str, str]):
+    def add_deed(self, deeds: tuple[str, str, str], deed_color: str):
         """Добавляет мероприятие на панель. deeds в виде: (name, time_start, time_end) Время в формате: hh:mm. Предполагается, что время в минутах кратно 15-ти,
            т.е.:00:00, 00:15, 00:30, 00:45 и т.д."""
         name, time_start, time_end = deeds[0], deeds[1], deeds[2]
-        wdg_color = '#8288FF'
-        wdg_text_color = 'White'
 
         #Проверка на 0 перед временем, пример: 19:09 -> 19:9
         hours_start = time_start.split(':')[0]
         mins_start = time_start.split(':')[1]
 
         hours_end = time_end.split(':')[0]
-        mins_end = time_end.split(':')[1] #ToDo: переписать по возможности, код - кал
+        mins_end = time_end.split(':')[1]  # ToDo: переписать по возможности, код - кал
 
         times = [hours_start, mins_start, hours_end, mins_end]
 
@@ -229,14 +210,17 @@ class DeedsPanel(Frame):
         row_start = round((times[0] * 60 + times[1]) / 15) # По формуле: (hours * 60 + minutes) / minutes_in_row (т.е. 15, т.к. в одной строке 15 мин.)
         row_end = round((times[2] * 60 + times[3]) / 15)
 
+        if row_start > row_end: #обработка случая окончания дела на следующий день, пример: 21:00 - 00:15
+            row_end = DAY_ROWS
+
         # Настройка виджета
-        deed_frm = Frame(self, bg=wdg_color)
+        deed_frm = Frame(self, bg=deed_color)
         deed_frm.grid(row=row_start, column=1, rowspan=row_end - row_start, sticky=W + E + N + S)
 
-        deed_lbl = Label(deed_frm, text=name, bg=wdg_color, fg=wdg_text_color, font=COMMON_FONT)
+        deed_lbl = Label(deed_frm, text=name, bg=deed_color, fg=COMMON_FONT_COLOR, font=COMMON_FONT)
         deed_lbl.grid(row=0, column=0, columnspan=2)
 
-        deed_wdg_time = Label(deed_frm, text=f'{time_start}:{time_end}', bg=wdg_color, fg=wdg_text_color, font=COMMON_FONT)
+        deed_wdg_time = Label(deed_frm, text=f'{time_start}:{time_end}', bg=deed_color, fg=COMMON_FONT_COLOR, font=COMMON_FONT)
         deed_wdg_time.grid(row=1, column=0)
 
 class Menu(Frame):
@@ -250,3 +234,13 @@ class Menu(Frame):
             button = CTkButton(args)
             button.grid(row=row, column=0)
 
+
+class DialogWindow(Frame):
+    def __init__(self, master, text: str, command=None):
+        super().__init__(master=master)
+
+
+    def grid(self):
+        pass
+    def pack(self):
+        pass
