@@ -9,13 +9,17 @@ DEED_COLOR2 = "#0398EB"
 COMMON_FONT = ('Arial', 12)
 COMMON_FONT_COLOR = 'White'
 
-START = 'Старт'
-STOP = 'Приостановить'
+START_TEXT = 'Старт'
+STOP_TEXT = 'Приостановить'
 CBOX_DEFAULT = 'Выберите дело'
 
 CURRENT_DEED = "current_deed"
 TIME_MAIN = "time_main"
 TIME_DEED = "time_deed"
+
+TIME_START = 'time_start'
+TIME_END = 'time_end'
+
 NAME = "name"
 TIME = "time"
 PLAN_TIME = "plan_time"

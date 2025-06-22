@@ -5,14 +5,13 @@ from threading import Thread
 
 from widgets import StopWatchSelector, DeedsPanel, Menu
 from data_processing import Saver
-from base import DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME
+from base import DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME, NAME
 
 
 class Window:
     def __init__(self):
 
         self.saver = Saver()
-        self.saver.create_jsons()
         self.day_data = self.get_data()
         self.buttons = (master, master)
 
@@ -25,7 +24,7 @@ class Window:
             else:
                 color = DEED_COLOR1
 
-            self.deeds_panel.add_deed(deed, color) # self.day_data будет словарём после отработки функции self.get_data()
+            self.deeds_panel.add_deed(deed, color)  # self.day_data будет словарём после отработки функции self.get_data()
 
         self.saving_thread = Thread(target=self.saving_cycle, daemon=True)
         self.saving_thread.start()
@@ -42,13 +41,13 @@ class Window:
         master.rowconfigure(0, weight=4)
         master.rowconfigure(1, weight=1)
 
-        menu_frame = Menu(master, self.buttons) # меню
+        menu_frame = Menu(master, self.buttons)  # меню
         menu_frame.grid(column=0, row=0, sticky=W + E + N + S)
 
-        wdg_frame = Frame(master, bg='Gray') # основная панель
+        wdg_frame = Frame(master, bg='Gray')  # основная панель
         wdg_frame.grid(row=0, column=1, sticky=W + E + N + S)
 
-        self.wdg_stop_watch = StopWatchSelector(wdg_frame, tuple(deed[0] for deed in self.day_data), self.saver.get_deed) # секундомер
+        self.wdg_stop_watch = StopWatchSelector(wdg_frame, tuple(deed[NAME] for deed in self.day_data), self.saver.get_deed) # секундомер
         self.wdg_stop_watch.grid(row=0, column=0, columnspan=2, sticky=W+E)
 
         # панель с планом
