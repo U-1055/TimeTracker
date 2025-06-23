@@ -49,7 +49,7 @@ class APIProcessor:
         today = datetime.date.today()
         time_min = datetime.datetime(year=today.year, month=today.month, day=today.day, hour=0, minute=0, # 00:00:00 текущего дня
                                      tzinfo=ZoneInfo(self.TIME_ZONE)).isoformat('T')
-        time_max = datetime.datetime(year=today.year, month=today.month, day=today.day, hour=23, minute=0, #23:59:00 текущего дня
+        time_max = datetime.datetime(year=today.year, month=today.month, day=today.day, hour=23, minute=59, #23:59:00 текущего дня
                                      tzinfo=ZoneInfo(self.TIME_ZONE)).isoformat('T')
 
         day_data = self.service.events().list(calendarId=self.CAL_ID, timeMin=time_min, timeMax=time_max, orderBy=self.START_TIME, singleEvents=True).execute()
@@ -58,6 +58,7 @@ class APIProcessor:
     def process(self, data_: dict) -> list[dict]:
         """Обрабатывает полученный от API словарь. Возвращает список вида:
         [{"name": название дела, "time_start": время начала в HH:MM, "time_end": время окончания в HH:MM}, ...]"""
+
         def date_to_time(date_: str) -> str:
             """Принимает дату в виде yy-mm-ddTHH:MM:SS+-HH:MM:SS. Возвращает время в формате HH:MM"""
             time_ = date_.split('T')[1]
@@ -65,9 +66,11 @@ class APIProcessor:
             time_ = time_[::-1].split(':', 1)[1]
 
             return time_[::-1]
+        names = []
 
         plan_struct = []
         for num, deed in enumerate(data_[self.ITEMS]):
+
             plan_struct.append(
                 {NAME: deed[self.SUMMARY],
                  TIME_START: date_to_time(deed[self.START][self.DATE_TIME]),
@@ -93,15 +96,17 @@ class Saver:
 
         if not temp_json_path.is_file():
             temp_json_struct = {
-                "current_deed": CBOX_DEFAULT, "time_main": '00:00:00', "time_deed": '00:00:00'
+                CURRENT_DEED: CBOX_DEFAULT, TIME_MAIN: '00:00:00', TIME_DEED: '00:00:00'
             }
             with open(temp_json_path, 'w') as temp:
                 json.dump(temp_json_struct, temp)
 
+        processed_data = self.process_day_data(self.day_data)
+
         if not main_json_path.is_file():
             main_json_struct = {
-                "fact_time": [{"name": deed[NAME], "time": "0"} for deed in self.day_data],
-                "plan_time": [{"name": deed[NAME], "time": calculate_time(deed[TIME_START], deed[TIME_END])} for deed in self.day_data]
+                FACT_TIME: [{NAME: deed[NAME], TIME: '0'} for deed in processed_data],
+                PLAN_TIME: processed_data
             }
             with open(main_json_path, 'w') as main_:
                 json.dump(main_json_struct, main_)
@@ -111,26 +116,46 @@ class Saver:
 
     def save(self, data: dict):
         with open(temp_json_path, 'w') as temp:
-            json.dump({"current_deed": data["current_deed"], "time_main": data["time_main"], "time_deed": data["time_deed"]}, temp)
+            json.dump({CURRENT_DEED: data[CURRENT_DEED], TIME_MAIN: data[TIME_MAIN], TIME_DEED: data[TIME_DEED]}, temp)
 
         with open(main_json_path, 'rb') as main_:
             main_data = json.load(main_)
-            for deed in main_data["fact_time"]:
-                if deed["name"] == data["current_deed"]:
-                    deed["time"] = time_to_sec(data["time_deed"])
+            for deed in main_data[FACT_TIME]:
+                if deed[NAME] == data[CURRENT_DEED]:
+                    deed[TIME] = time_to_sec(data[TIME_DEED])
 
         with open(main_json_path, 'w') as main_:
             json.dump(main_data, main_)
+
+    def process_day_data(self, day_data: list[dict]) -> list[dict]:
+        """Удаляет дела с повторяющимися именами из списка, получаемого от APIProcessor (day_data)
+           и суммирует их длительность. Пример: [{"name": "deed1", "time": 3600}, {"name": "deed1", "time": "3600"}] ->
+           -> [{"name": "deed1", "time": "7200"}]"""
+        names = []
+        indexes = []
+        deeds = [{NAME: deed[NAME], TIME: calculate_time(deed[TIME_START], deed[TIME_END])} for deed in day_data]
+
+        for idx, deed in enumerate(deeds):
+            if deed[NAME] in names:  # У дела повторяющееся имя
+                for first_deed in deeds:  # Нахождение первого дела
+                    if first_deed[NAME] == deed[NAME]:
+                        indexes.append(idx)
+                        first_deed[TIME] = str(int(first_deed[TIME]) + int(deed[TIME]))  # Суммирование длительности
+                        break
+            names.append(deed[NAME])
+
+        return [deed for idx, deed in enumerate(deeds) if not idx in indexes]  # Исключение дела, если его индекс в списке повторяющихся
 
     def change_plan(self):
         pass
 
     def finish_day(self):
         """Вызывается из MainWindow для завершения дня"""
-        temp_json_path.unlink() # удаляет временный JSON
+        temp_json_path.unlink() # удаляет временный JSON ToDo: проверить работу
 
     def in_process(self) -> bool:
         return temp_json_path.is_file()
+
     @staticmethod
     def get_deed(deed_name: str) -> str:
         """Предназначен для вызова из StopWatchSelector.
@@ -143,7 +168,7 @@ class Saver:
 
     def compare_plans(self) -> bool:
         """Сравнивает план с API и сохранённый план из main_json"""
-        api_plan = [{"name": deed[NAME], "time": calculate_time(deed[TIME_START], deed[TIME_END])} for deed in self.get_plan()]
+        api_plan = self.process_day_data(self.get_plan())
         with open(main_json_path, 'rb') as main_:
             saved_plan = json.load(main_)
 
@@ -160,7 +185,3 @@ class Saver:
             return self.api_processor.get_data()
         except HttpError as err:
             print(err)
-
-    def get_data(self):
-        """Возвращает данные о дне"""
-        return self.day_data
