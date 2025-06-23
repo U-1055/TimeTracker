@@ -8,7 +8,7 @@ from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from base import (time_to_sec, calculate_time, time_to_format, CURRENT_DEED, TIME, TIME_MAIN, TIME_DEED, PLAN_TIME,
-                  FACT_TIME, NAME, CBOX_DEFAULT, TIME_START, TIME_END)
+                  FACT_TIME, NAME, CBOX_DEFAULT, TIME_START, TIME_END, HTTP_ERROR, SERVER_NOT_FOUND_ERROR)
 
 PATH = 'data'
 DAYS = 'days'
@@ -82,9 +82,9 @@ class APIProcessor:
         try:
             return self.send_request()
         except HttpError as error:
-            print(f"Ошибка при извлечении данных из календаря:{error}")
+            print(f"{HTTP_ERROR}: \n{error}")
         except ServerNotFoundError as server_error:
-            print(f"Сервер не найден: {server_error}")
+            print(f"{SERVER_NOT_FOUND_ERROR}: \n{server_error}")
 
 class Saver:
     def __init__(self):
@@ -147,7 +147,17 @@ class Saver:
         return [deed for idx, deed in enumerate(deeds) if not idx in indexes]  # Исключение дела, если его индекс в списке повторяющихся
 
     def change_plan(self):
-        pass
+        """Анализирует и записывает в main_json изменённый план. Действует так: обращается к API за новым планом, проходит по
+           наибольшему из планов, сравнивая их элементы между собой."""
+        last_data = self.day_data
+        changed_data = self.api_processor.get_data()
+
+        compare_obj = last_data
+        if len(changed_data) > len(last_data):
+            compare_obj = changed_data
+
+        for deed in compare_obj:
+            if
 
     def finish_day(self):
         """Вызывается из MainWindow для завершения дня"""

@@ -215,9 +215,6 @@ class DeedsPanel(Frame):
         deed_wdg_time = Label(deed_frm, text=f'{deeds[TIME_START]} - {deeds[TIME_END]}', bg=deed_color, fg=COMMON_FONT_COLOR, font=COMMON_FONT)
         deed_wdg_time.grid(row=1, column=0)
 
-    def change_plan(self):
-        pass
-
 class Menu(Frame):
 
     def __init__(self, parent, buttons: tuple): #Параметры кнопок

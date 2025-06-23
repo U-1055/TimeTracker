@@ -18,13 +18,7 @@ class Window:
         self.deeds_panel = DeedsPanel(master)
         self.place_widgets()
 
-        for num, deed in enumerate(self.day_data):
-            if num % 2 == 0:
-                color = DEED_COLOR2
-            else:
-                color = DEED_COLOR1
-
-            self.deeds_panel.add_deed(deed, color)
+        self.load_to_deeds_panel()
 
         self.saving_thread = Thread(target=self.saving_cycle, daemon=True)
         self.saving_thread.start()
@@ -55,7 +49,7 @@ class Window:
         save_btn = CTkButton(wdg_frame, command=self.save)
         save_btn.grid(row=1, column=3)
 
-        change_btn = CTkButton(wdg_frame, text=CHANGE_PLAN_TEXT, command=self.)
+        change_btn = CTkButton(wdg_frame, text=CHANGE_PLAN_TEXT, command=self.change_plan)
 
     def change_plan(self):
         """Вызывается при изменении плана. Вызывает соответствующие методы у Saver, DeedsPanel и StopWatchSelector"""
@@ -63,6 +57,7 @@ class Window:
             return
         self.save()  # Сохраняет текущий план
         self.saver.change_plan()  # Запускает изменение плана
+        self.day_data = self.saver.day_data
         self.wdg_stop_watch.load_deed(self.saver.get_temp_json())
 
 
@@ -75,6 +70,15 @@ class Window:
         self.saving = False
         self.saver.finish_day()
         self.save()
+
+    def load_to_deeds_panel(self):
+        for num, deed in enumerate(self.day_data):
+            if num % 2 == 0:
+                color = DEED_COLOR2
+            else:
+                color = DEED_COLOR1
+
+            self.deeds_panel.add_deed(deed, color)
 
     def saving_cycle(self):
         while self.saving:

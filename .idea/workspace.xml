@@ -4,10 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Сделано:&#10;1) Подключено Google Calendar API&#10;2) Переключение состояние StopWatchSelector&#10;3) Работающий секундомер (нужно протестировать)">
-      <change afterPath="$PROJECT_DIR$/tests.py" afterDir="false" />
+    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Сделано:&#10;1) Разобраны ToDo&#10;2) Переписан DeedsPanel.add_deed&#10;3) Начата система изменения плана&#10;4) (Возможно) устранена причина сохранения CBOX_DEFAULT в файл вместо конкретого дела (протестировать)">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/base.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/widgets.py" beforeDir="false" afterPath="$PROJECT_DIR$/widgets.py" afterDir="false" />
@@ -127,7 +125,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750596907672</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Сделано:&#10;1) Разобраны ToDo&#10;2) Переписан DeedsPanel.add_deed&#10;3) Начата система изменения плана&#10;4) (Возможно) устранена причина сохранения CBOX_DEFAULT в файл вместо конкретого дела (протестировать)">
+      <option name="closed" value="true" />
+      <created>1750683804036</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1750683804036</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -137,17 +143,11 @@
     <MESSAGE value="Сделано:&#10;1) Продумана система сохранения&#10;2) Переделаны StopWatch и Combobox&#10;3) Начата система сохранения: создание JSON'ов при запуске и сохранение из StopWatch" />
     <MESSAGE value="Сделано:&#10;1) Доделана система сохранения: реализован цикл сохранения, сохранение данных в JSON'ы, загрузка при запуске&#10;2) Обработан случай окончания мероприятия на следующий день (на уровне DeedsPanel)" />
     <MESSAGE value="Сделано:&#10;1) Подключено Google Calendar API&#10;2) Переключение состояние StopWatchSelector&#10;3) Работающий секундомер (нужно протестировать)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Сделано:&#10;1) Подключено Google Calendar API&#10;2) Переключение состояние StopWatchSelector&#10;3) Работающий секундомер (нужно протестировать)" />
+    <MESSAGE value="Сделано:&#10;1) Разобраны ToDo&#10;2) Переписан DeedsPanel.add_deed&#10;3) Начата система изменения плана&#10;4) (Возможно) устранена причина сохранения CBOX_DEFAULT в файл вместо конкретого дела (протестировать)" />
+    <option name="LAST_COMMIT_MESSAGE" value="Сделано:&#10;1) Разобраны ToDo&#10;2) Переписан DeedsPanel.add_deed&#10;3) Начата система изменения плана&#10;4) (Возможно) устранена причина сохранения CBOX_DEFAULT в файл вместо конкретого дела (протестировать)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/widgets.py</url>
-          <line>147</line>
-          <option name="timeStamp" value="25" />
-        </line-breakpoint>
-      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
