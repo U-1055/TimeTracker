@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Сделано:&#10;1) Разобраны ToDo&#10;2) Переписан DeedsPanel.add_deed&#10;3) Начата система изменения плана&#10;4) (Возможно) устранена причина сохранения CBOX_DEFAULT в файл вместо конкретого дела (протестировать)">
+    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Наброски изменения плана">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
@@ -133,7 +133,23 @@
       <option name="project" value="LOCAL" />
       <updated>1750683804036</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="Наброски изменения плана">
+      <option name="closed" value="true" />
+      <created>1750684667993</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1750684667993</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Наброски изменения плана">
+      <option name="closed" value="true" />
+      <created>1750684794182</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1750684794182</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -144,10 +160,18 @@
     <MESSAGE value="Сделано:&#10;1) Доделана система сохранения: реализован цикл сохранения, сохранение данных в JSON'ы, загрузка при запуске&#10;2) Обработан случай окончания мероприятия на следующий день (на уровне DeedsPanel)" />
     <MESSAGE value="Сделано:&#10;1) Подключено Google Calendar API&#10;2) Переключение состояние StopWatchSelector&#10;3) Работающий секундомер (нужно протестировать)" />
     <MESSAGE value="Сделано:&#10;1) Разобраны ToDo&#10;2) Переписан DeedsPanel.add_deed&#10;3) Начата система изменения плана&#10;4) (Возможно) устранена причина сохранения CBOX_DEFAULT в файл вместо конкретого дела (протестировать)" />
-    <option name="LAST_COMMIT_MESSAGE" value="Сделано:&#10;1) Разобраны ToDo&#10;2) Переписан DeedsPanel.add_deed&#10;3) Начата система изменения плана&#10;4) (Возможно) устранена причина сохранения CBOX_DEFAULT в файл вместо конкретого дела (протестировать)" />
+    <MESSAGE value="Наброски изменения плана" />
+    <option name="LAST_COMMIT_MESSAGE" value="Наброски изменения плана" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/data_processing.py</url>
+          <line>163</line>
+          <option name="timeStamp" value="29" />
+        </line-breakpoint>
+      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">

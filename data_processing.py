@@ -137,7 +137,7 @@ class Saver:
 
         for idx, deed in enumerate(deeds):
             if deed[NAME] in names:  # У дела повторяющееся имя
-                for first_deed in deeds:  # Нахождение первого дела
+                for first_deed in deeds:  # Нахождение первого дела с этим именем
                     if first_deed[NAME] == deed[NAME]:
                         indexes.append(idx)
                         first_deed[TIME] = str(int(first_deed[TIME]) + int(deed[TIME]))  # Суммирование длительности

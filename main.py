@@ -60,16 +60,14 @@ class Window:
         self.day_data = self.saver.day_data
         self.wdg_stop_watch.load_deed(self.saver.get_temp_json())
 
-
-
     def save(self):
         self.saver.save(self.wdg_stop_watch.get_current_data())
 
     def finish_day(self):
         """Вызывается при завершении дня"""
         self.saving = False
-        self.saver.finish_day()
         self.save()
+        self.saver.finish_day()
 
     def load_to_deeds_panel(self):
         for num, deed in enumerate(self.day_data):
@@ -84,7 +82,6 @@ class Window:
         while self.saving:
             time.sleep(SAVE_CYCLE_TIME)
             self.save()
-
 
 class GraphicWindow(Frame):
     """Окно с графиком"""

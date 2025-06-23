@@ -76,9 +76,9 @@ class StopWatchSelector(Frame):
         if self.wdg_selector.get() == CBOX_DEFAULT:  # На случай включённой кнопки при CBOX_DEFAULT в селекторе
             return
 
-        self.thread_1 = Thread(target=self.count_time, args=[self.wdg_main_swatch], daemon=True)
+        self.thread_1 = Thread(target=self.count_time, args=[self.wdg_main_swatch, 1], daemon=True)
         self.thread_1.start()
-        self.thread_2 = Thread(target=self.count_time, args=[self.wdg_deed_swatch], daemon=True)
+        self.thread_2 = Thread(target=self.count_time, args=[self.wdg_deed_swatch, 2], daemon=True)
         self.thread_2.start()
 
         self.counting = True  # флаг для цикла отсчёта
@@ -147,7 +147,7 @@ class StopWatchSelector(Frame):
 
         return self.data
 
-    def count_time(self, widget):
+    def count_time(self, widget, thread_num: int):
         secs = time_to_sec(widget.get())
         while self.counting:
             time.sleep(1)
@@ -157,6 +157,10 @@ class StopWatchSelector(Frame):
 
             self.sw_insert(widget, f'{hours}:{minutes}:{str(secs % 60).rjust(2, '0')}')
 
+        if thread_num == 1:
+            self.thread_2.join()
+        else:
+            self.thread_1.join()
 
 class DeedsPanel(Frame):
     def __init__(self, parent):
