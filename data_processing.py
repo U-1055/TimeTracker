@@ -157,7 +157,7 @@ class Saver:
             compare_obj = changed_data
 
         for deed in compare_obj:
-            if
+            pass
 
     def finish_day(self):
         """Вызывается из MainWindow для завершения дня"""
