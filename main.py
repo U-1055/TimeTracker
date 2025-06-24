@@ -60,7 +60,12 @@ class Window:
         self.save()  # Сохраняет текущий план
         self.saver.change_plan()  # Запускает изменение плана
         self.day_data = self.saver.day_data
+
+        self.wdg_stop_watch.to_default()  # Загрузка новых данных в StopWatchSelector
         self.wdg_stop_watch.load_deed(self.saver.get_temp_json())
+
+        self.deeds_panel.clear_panel()  # Загрузка новых данных в DeedsPanel
+        self.load_to_deeds_panel()
 
     def save(self):
         self.saver.save(self.wdg_stop_watch.get_current_data())

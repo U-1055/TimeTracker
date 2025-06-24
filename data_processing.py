@@ -98,7 +98,14 @@ class APIProcessor:
         except ServerNotFoundError as server_error:
             print(f"{SERVER_NOT_FOUND_ERROR}: \n{server_error}")
 
+
 class Saver:
+    day_data: list[dict]
+
+    # Константы для определения положения временной метки по отношению к другой временной метке
+    EARLIER = 'earlier'
+    LATER = 'later'
+
     def __init__(self):
         self.api_processor = APIProcessor()
         self.day_data = self.get_plan()
@@ -176,21 +183,35 @@ class Saver:
         return [deed for idx, deed in enumerate(deeds) if not idx in indexes]
 
     def change_plan(self):
-        """Анализирует и записывает в main_json изменённый план. Действует так: обращается к API за новым планом, проходит по
-           наибольшему из планов, сравнивая их элементы между собой."""
+        """Анализирует и записывает в main_json изменённый план. По сути, является заглушкой, т.к. не работает при
+           удалении дел и очищает IGNORING_TIME, если дело было изменено"""
+        with open(main_json_path, 'rb') as main_:
+            deeds_data = json.load(main_)
+
         last_data = self.day_data
         changed_data = self.api_processor.get_data()
 
-        compare_obj = last_data
-        if len(changed_data) > len(last_data):
-            compare_obj = changed_data
-
-        for deed in compare_obj:
+        current_time = datetime.datetime.now().time().strftime("%H:%M")  # Текущее время
+        for last_deed, changed_deed in last_data, changed_data:
+            deed_name = changed_deed[NAME]
+            if deed_name != last_deed[NAME]:
+                return  # НЕ РАБОТАЕТ ПРИ УДАЛЕНИИ ДЕЛА
+            last_deed_time = calculate_time(last_deed[TIME_START], last_deed[TIME_END])
+            changed_deed_time = calculate_time(changed_deed[TIME_START], changed_deed[TIME_END])
             pass
+    def change_main_json(self, last_data: list[dict], changed_data: list[dict]):
+        """Анализирует новый и старый план, на основе этого изменяет main_json"""
+        pass
 
+    def compare_time_points(self, comparing_time: str, time_: str):
+        """Сравнивает comparing_time с time_ в формате HH:MM."""
+        if calculate_time(comparing_time, time_) >= 0:  # Например, 12:00 и 13:00 -> 13:00 - 12:00 > 0 -> 12:00 раньше
+            return self.EARLIER
+        else:  # В противном случае - позже. Если метки равны, то возвращается EARLIER
+            return self.LATER
     def finish_day(self):
         """Вызывается из MainWindow для завершения дня"""
-        temp_json_path.unlink() # удаляет временный JSON ToDo: проверить работу
+        temp_json_path.unlink() # удаляет временный JSON
 
     def in_process(self) -> bool:
         return temp_json_path.is_file()
@@ -209,7 +230,7 @@ class Saver:
     def change_ignoring_time(deed_name: str, time_start: str, time_end: str, ignoring: bool):
         """Предназначен для вызова из Deed. Меняет IGNORING_TIME дела deed_name. Если ignoring = 1: прибавляет
            разницу между time_end и time_start, если 0: отнимает"""
-        time_view = f'{time_start}-{time_end}' # ToDo: попробовать избежать хардкода
+        time_view = f'{time_start}-{time_end}'  # ToDo: попробовать избежать хардкода
 
         with open(main_json_path, 'rb') as main_:
             deeds_data = json.load(main_)
@@ -220,7 +241,7 @@ class Saver:
                     deed[IGNORING_TIME].append(time_view)
                 else:
                     if time_view in deed[IGNORING_TIME]:
-                        deed[IGNORING_TIME].remove(time_view) # На всякий случай, предполагается, что при ignoring = 0 элемент уже есть в списке
+                        deed[IGNORING_TIME].remove(time_view)  # На всякий случай, предполагается, что при ignoring = 0 элемент уже есть в списке
                 break
 
         with open(main_json_path, 'w') as main_:

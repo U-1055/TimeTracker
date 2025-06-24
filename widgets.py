@@ -1,5 +1,5 @@
 from tkinter import Frame, Label, NORMAL, END, W, E, S, N, TOP, DISABLED
-from tkinter.ttk import Combobox
+from tkinter.ttk import Combobox, Separator
 from customtkinter import CTkEntry, CTkButton, CTkSwitch
 
 import time
@@ -92,10 +92,6 @@ class StopWatchSelector(Frame):
         if self.counting:
             self.counting = False
 
-    def get_data(self) -> dict:
-        """Возвращает данные о текущем деле в виде: {"name": название, "time": время в секундах}"""
-        return {NAME: self.wdg_selector.get(), TIME: self.wdg_main_swatch.get()}
-
     def sw_insert(self, widget, text: str):
         widget.configure(state=NORMAL)
 
@@ -112,6 +108,12 @@ class StopWatchSelector(Frame):
         self.sw_insert(self.wdg_deed_swatch, deed_data[TIME_DEED])
         self.change_wdg_state(self.LAUNCH)  # Изменение состояния
 
+    def to_default(self):
+        """Вызывается из Window при изменении плана. Устанавливает начальные значения в """
+        self.wdg_selector.set(CBOX_DEFAULT)
+        self.sw_insert(self.wdg_main_swatch, DEFAULT_TIME)
+        self.sw_insert(self.wdg_deed_swatch, DEFAULT_TIME)
+        # В данном случае из Window последовательно вызываются to_default и load_deed, т.е. состояние будет изменено на состояние при запуске
     def change_wdg_state(self, event: str):
         """Меняет состояние wdg_selector, start_btn и stop_btn в зависимости от события"""
         if event == self.START:
@@ -165,7 +167,7 @@ class StopWatchSelector(Frame):
 
 class DeedsPanel(Frame):
     """Панель с делами. Параметр change_saver - static-метод класса Saver, передаваемый в экземпляры класса Deed"""
-    deeds: list[dict]
+    deeds: list
 
     def __init__(self, parent, change_saver, state_checker):
         super().__init__(master=parent, highlightthickness=3, highlightbackground=COLOR3)
@@ -187,7 +189,7 @@ class DeedsPanel(Frame):
             row += 4
 
     def mark_panel(self):
-
+        """Создаёт разметку панели. 1-я, а затем каждая 4-я линии обозначают границы часа."""
         for i in range(DAY_ROWS):
             self.rowconfigure(i, weight=1)
             if i % 4 == 0:
@@ -222,6 +224,12 @@ class DeedsPanel(Frame):
         deed_wdg = Deed(self, deed_name=deeds[NAME], time_start=deeds[TIME_START], time_end=deeds[TIME_END], color=deed_color,
                         text_color=COMMON_FONT_COLOR, change_saver=self.change_saver, state_checker=self.state_checker)
         deed_wdg.grid(row=row_start, column=1, rowspan=row_end - row_start, sticky=W + E + N + S)
+        self.deeds.append(deed_wdg)  # добавление экземпляра класса deed в список виджетов дел
+
+    def clear_panel(self):
+        """Очищает панель. Удаляет все виджеты дел"""
+        for deed in self.deeds:
+            deed.destroy()
 
 class Deed(Frame):
     """Виджет дела (мероприятия), размещаемый на панели DeedsPanel. Параметр change_saver принимает static-метод класса
@@ -245,15 +253,16 @@ class Deed(Frame):
             self.changing_btn.select()
 
         self.change_wdg_state(state)
+
     def place_widgets(self):
-        self.name_lbl = Label(self, text=self.deed_name, bg=self.color, fg=self.text_color)
+        self.name_lbl = Label(self, text=self.deed_name, bg=self.color, fg=self.text_color, font=COMMON_FONT)
         self.name_lbl.grid(row=0, column=0, columnspan=2)
 
-        self.time_lbl = Label(self, text=f'{self.time_start}-{self.time_end}', bg=self.color, fg=self.text_color)
+        self.time_lbl = Label(self, text=f'{self.time_start}-{self.time_end}', bg=self.color, fg=self.text_color, font=COMMON_FONT)
         self.time_lbl.grid(row=1, column=0)
 
-        self.changing_btn = CTkSwitch(self, bg_color=self.color,
-                                      command=self.change_ign_state)
+        self.changing_btn = CTkSwitch(self, bg_color=self.color, text=IGNORING_TEXT, command=self.change_ign_state, font=COMMON_FONT,
+                                      text_color=self.text_color)
         self.changing_btn.grid(row=2, column=2)
 
     def change_ign_state(self):
@@ -270,10 +279,13 @@ class Deed(Frame):
             self.configure(bg=IGNORING_COLOR)
             self.name_lbl.configure(bg=IGNORING_COLOR, fg=IGNORING_TEXT_COLOR)
             self.time_lbl.configure(bg=IGNORING_COLOR, fg=IGNORING_TEXT_COLOR)
+            self.changing_btn.configure(text_color=IGNORING_TEXT_COLOR)
         else:
             self.configure(bg=self.color)
             self.name_lbl.configure(bg=self.color, fg=self.text_color)
             self.time_lbl.configure(bg=self.color, fg=self.text_color)
+            self.changing_btn.configure(text_color=self.text_color)
+
 
 class Menu(Frame):
 
