@@ -6,6 +6,8 @@ COLOR2 = 'Gray'
 COLOR3 = '#DEDEDE'
 BLACK = 'Black'
 RED = "#FF290D"
+IGNORING_COLOR = "#DBDBDB"
+IGNORING_TEXT_COLOR = "#2B2B2B"
 DEED_COLOR1 = "#FF290D"
 DEED_COLOR2 = "#04DBFF"
 
@@ -19,6 +21,7 @@ STOP_TEXT = 'Приостановить'
 CBOX_DEFAULT = 'Выберите дело'
 FINISH_DAY_TEXT = 'Завершить день'
 CHANGE_PLAN_TEXT = 'Обновить план'
+IGNORING_TEXT = 'Игнорировать'
 DEFAULT_TIME = '00:00:00'  # Начальный ввод в секундомер
 
 # Сообщения об ошибках
@@ -39,6 +42,7 @@ NAME = "name"
 TIME = "time"
 PLAN_TIME = "plan_time"
 FACT_TIME = "fact_time"
+IGNORING_TIME = "ignoring_time"
 
 # Прочее
 MINS_IN_ROW = 15  # количество минут в одной строчке на панели дня DeedsPanel
@@ -65,16 +69,20 @@ def calculate_time(time1: str, time2: str) -> int:
 
 
 def time_to_sec(time_f: str) -> int:
-    """Переводит время в секунды из формата hh:mm:ss"""
+    """Переводит время в секунды из формата hh:mm:ss (допускается отсутствие mm и/или ss)"""
     time_res = time_f.split(':')
     for i, value in enumerate(time_res):  # проверка на незначащие нули
         time_res[i] = rm_insignificant_zeros(time_res[i])
+    result = 0
 
-    hours = time_res[0] * 3600
-    minutes = time_res[1] * 60
-    seconds = time_res[2]
+    if len(time_res) >= 1:
+        result += time_res[0] * 3600  # часы
+    if len(time_res) >= 2:
+        result += time_res[1] * 60  # минуты
+    if len(time_res) == 3:
+        result += time_res[2]  # секунды
 
-    return hours + minutes + seconds
+    return result
 
 
 def time_to_format(time_sec: int) -> str:

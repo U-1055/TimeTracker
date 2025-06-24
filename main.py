@@ -4,7 +4,7 @@ from customtkinter import CTkButton
 from threading import Thread
 
 from widgets import StopWatchSelector, DeedsPanel, Menu
-from data_processing import Saver
+from data_processing import Saver, TimingDataHandler
 from base import DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME, NAME, FINISH_DAY_TEXT, COLOR1, COLOR3, COLOR2, CHANGE_PLAN_TEXT
 
 
@@ -15,7 +15,7 @@ class Window:
         self.day_data = self.saver.day_data
 
         self.saving = True
-        self.deeds_panel = DeedsPanel(master)
+        self.deeds_panel = DeedsPanel(master, self.saver.change_ignoring_time, self.saver.get_deed_state)
         self.place_widgets()
 
         self.load_to_deeds_panel()
@@ -53,8 +53,10 @@ class Window:
 
     def change_plan(self):
         """Вызывается при изменении плана. Вызывает соответствующие методы у Saver, DeedsPanel и StopWatchSelector"""
-        if self.saver.compare_plans():  # План изменён?
+        if self.saver.compare_plans():  # План без изменений?
             return
+        self.saving = False
+
         self.save()  # Сохраняет текущий план
         self.saver.change_plan()  # Запускает изменение плана
         self.day_data = self.saver.day_data
@@ -85,8 +87,14 @@ class Window:
 
 class GraphicWindow(Frame):
     """Окно с графиком"""
+    timing_data: list[dict]
+
     def __init__(self, parent):
         super().__init__(master=parent)
+        self.place_widgets()
+
+    def place_widgets(self):
+        pass
 
     def grid(self):
         pass

@@ -8,7 +8,20 @@ from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from base import (time_to_sec, calculate_time, time_to_format, CURRENT_DEED, TIME, TIME_MAIN, TIME_DEED, PLAN_TIME,
-                  FACT_TIME, NAME, CBOX_DEFAULT, TIME_START, TIME_END, HTTP_ERROR, SERVER_NOT_FOUND_ERROR)
+                  FACT_TIME, NAME, CBOX_DEFAULT, TIME_START, TIME_END, HTTP_ERROR, SERVER_NOT_FOUND_ERROR, IGNORING_TIME)
+
+"""Структура json'ов: 
+   temp_json: {CURRENT_DEED: название дела, 
+               TIME_START: время старта (HH:MM:SS),
+               TIME_END: время окончания (HH:MM:SS)}
+               
+   main_json: {[FACT_TIME: 
+                {NAME: название дела, 
+                 TIME: время (из StopWatchSelector) в секундах}, 
+                PLAN_TIME: 
+                {NAME: ...,
+                 TIME: время согласно календарю (в секундах), 
+                 IGNORING_TIME: игнорируемые отрезки времени в формате HH:MM-HH:MM вида: ['time_start-time_end', ]}]}"""
 
 PATH = 'data'
 DAYS = 'days'
@@ -56,7 +69,7 @@ class APIProcessor:
         return self.process(day_data)
 
     def process(self, data_: dict) -> list[dict]:
-        """Обрабатывает полученный от API словарь. Возвращает список вида:
+        """Обрабатывает полученный от API словарь. Удаляет пробелы в начале и в конце name. Возвращает список вида:
         [{"name": название дела, "time_start": время начала в HH:MM, "time_end": время окончания в HH:MM}, ...]"""
 
         def date_to_time(date_: str) -> str:
@@ -66,13 +79,12 @@ class APIProcessor:
             time_ = time_[::-1].split(':', 1)[1]
 
             return time_[::-1]
-        names = []
 
         plan_struct = []
         for num, deed in enumerate(data_[self.ITEMS]):
 
             plan_struct.append(
-                {NAME: deed[self.SUMMARY],
+                {NAME: deed[self.SUMMARY].strip(),  # Удаляет пробелы
                  TIME_START: date_to_time(deed[self.START][self.DATE_TIME]),
                  TIME_END: date_to_time(deed[self.END][self.DATE_TIME])})
 
@@ -128,14 +140,27 @@ class Saver:
             json.dump(main_data, main_)
 
     def process_day_data(self, day_data: list[dict]) -> list[dict]:
-        """Удаляет дела с повторяющимися именами из списка, получаемого от APIProcessor (day_data)
-           и суммирует их длительность. Пример: [{"name": "deed1", "time": 3600}, {"name": "deed1", "time": "3600"}] ->
-           -> [{"name": "deed1", "time": "7200"}]"""
+        """Обрабатывает day_data в пригодный для ввода в main_json формат. Удаляет повторяющиеся дела и суммирует их
+           длительность, удаляет дела, начатые ранее 00:00 текущего дня.
+           Пример: [{"name": deed1, "time_start": 23:00, "time_end": 03:00}, {"name": deed2, ""}]"""
+        # ToDo: желательно отрефакторить, порождает проблемы
+        def rm_last_day():
+            """Удаляет дела, начатые ранее 00:00 текущего дня"""
+
+            deed = day_data[0]
+            next_deed = day_data[1]
+            if time_to_sec(deed[TIME_START]) > time_to_sec(next_deed[TIME_START]):
+                indexes.append(0)
+
         names = []
         indexes = []
-        deeds = [{NAME: deed[NAME], TIME: calculate_time(deed[TIME_START], deed[TIME_END])} for deed in day_data]
+        rm_last_day()
+        day_data = self.rm_deeds(indexes, day_data)
+        indexes = []  # Очистить индексы, чтобы не удалить лишнее при втором вызове rm_deeds
+        deeds = [{NAME: deed[NAME], TIME: calculate_time(deed[TIME_START], deed[TIME_END]), IGNORING_TIME: []} for deed in day_data]
 
         for idx, deed in enumerate(deeds):
+
             if deed[NAME] in names:  # У дела повторяющееся имя
                 for first_deed in deeds:  # Нахождение первого дела с этим именем
                     if first_deed[NAME] == deed[NAME]:
@@ -144,7 +169,11 @@ class Saver:
                         break
             names.append(deed[NAME])
 
-        return [deed for idx, deed in enumerate(deeds) if not idx in indexes]  # Исключение дела, если его индекс в списке повторяющихся
+        return self.rm_deeds(indexes, deeds)  # Исключение дела, если его индекс в списке повторяющихся
+
+    def rm_deeds(self, indexes: list, deeds: list):
+        """Возвращает список без элементов под указанными индексами"""
+        return [deed for idx, deed in enumerate(deeds) if not idx in indexes]
 
     def change_plan(self):
         """Анализирует и записывает в main_json изменённый план. Действует так: обращается к API за новым планом, проходит по
@@ -176,6 +205,40 @@ class Saver:
             if deed[NAME] == deed_name:
                 return time_to_format(int(deed[TIME]))
 
+    @staticmethod
+    def change_ignoring_time(deed_name: str, time_start: str, time_end: str, ignoring: bool):
+        """Предназначен для вызова из Deed. Меняет IGNORING_TIME дела deed_name. Если ignoring = 1: прибавляет
+           разницу между time_end и time_start, если 0: отнимает"""
+        time_view = f'{time_start}-{time_end}' # ToDo: попробовать избежать хардкода
+
+        with open(main_json_path, 'rb') as main_:
+            deeds_data = json.load(main_)
+
+        for deed in deeds_data[PLAN_TIME]:
+            if deed[NAME] == deed_name:
+                if ignoring:  # Если ignoring - добавить время
+                    deed[IGNORING_TIME].append(time_view)
+                else:
+                    if time_view in deed[IGNORING_TIME]:
+                        deed[IGNORING_TIME].remove(time_view) # На всякий случай, предполагается, что при ignoring = 0 элемент уже есть в списке
+                break
+
+        with open(main_json_path, 'w') as main_:
+            json.dump(deeds_data, main_)
+
+    @staticmethod
+    def get_deed_state(time_start: str, time_end) -> int:
+        """Вызывается из Deed при запуске. Возвращает состояние changing_btn в Deed, если f"{time_start}-{time_end}" есть в
+           IGNORING_TIME - 1, если нет - 0."""
+        time_view = f'{time_start}-{time_end}' # ToDo: попробовать избежать хардкода
+
+        with open(main_json_path, 'rb') as main_:
+            deeds_data = json.load(main_)
+        for deed in deeds_data[PLAN_TIME]:
+            if time_view in deed[IGNORING_TIME]:
+                return 1
+        return 0
+
     def compare_plans(self) -> bool:
         """Сравнивает план с API и сохранённый план из main_json"""
         api_plan = self.process_day_data(self.get_plan())
@@ -191,7 +254,33 @@ class Saver:
 
     def get_plan(self) -> list[dict]:
         """Получает план из APIProcessor"""
-        try:
-            return self.api_processor.get_data()
-        except HttpError as err:
-            print(err)
+        return self.api_processor.get_data()
+
+
+class TimingDataHandler:
+    """Обрабатывает данные о соответствии плану и возвращает их в GraphicWindow"""
+    timing_data: list[dict]
+    DAYS_PATH = pathlib.Path(PATH, DAYS)
+
+    def __init__(self, dates: list[str]):
+        self.timing_data = []
+        for date in dates:
+            deeds_data = self.take_data(date)
+            if deeds_data:  # Если файл date.json существует
+                self.timing_data.append(self.calculate_timing(deeds_data))
+
+    def take_data(self, date: str) -> list[dict] | bool:
+        """Возвращает данные из main_json'a за день, указанный в date"""
+        json_path = pathlib.Path(self.DAYS_PATH, f'{date}.json')
+        if not json_path.is_file():  # Проверка на существование файла
+            return False
+        with open(json_path, 'rb') as main_:
+            return self.process_data(json.load(main_))
+
+    def process_data(self, deeds_data: list[dict]) -> list[dict]:
+        """Вычитает игнорируемое время (ignoring_time) из запланированного. Возвращает словарь дня с вычтенным
+           игнорированным временем и отсутствующим "ignoring_time"."""
+        return [{NAME: deed[NAME], TIME: int(deed[TIME]) - int(deed[IGNORING_TIME])} for deed in deeds_data]
+
+    def calculate_timing(self, deeds_data: list[dict]) -> dict:
+        """Вычисляет соответствие плану."""
