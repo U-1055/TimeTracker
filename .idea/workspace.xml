@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Добавлена система игнорирования дел, отмеченных пользователем">
+    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Определена логика изменения плана на уровне Window; начал определять логику на уровне Saver'а">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/base.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/widgets.py" beforeDir="false" afterPath="$PROJECT_DIR$/widgets.py" afterDir="false" />
@@ -54,6 +55,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "ASKED_ADD_EXTERNAL_FILES": "true",
+    "Python tests.Python tests in tests.py.executor": "Run",
     "Python.base.executor": "Run",
     "Python.data_processing.executor": "Run",
     "Python.main.executor": "Run",
@@ -174,7 +176,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750765038964</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Определена логика изменения плана на уровне Window; начал определять логику на уровне Saver'а">
+      <option name="closed" value="true" />
+      <created>1750770481945</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1750770481945</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -189,10 +199,28 @@
     <MESSAGE value="Доделки" />
     <MESSAGE value="Доделки (сделано удаление temp_json)" />
     <MESSAGE value="Добавлена система игнорирования дел, отмеченных пользователем" />
-    <option name="LAST_COMMIT_MESSAGE" value="Добавлена система игнорирования дел, отмеченных пользователем" />
+    <MESSAGE value="Определена логика изменения плана на уровне Window; начал определять логику на уровне Saver'а" />
+    <option name="LAST_COMMIT_MESSAGE" value="Определена логика изменения плана на уровне Window; начал определять логику на уровне Saver'а" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/data_processing.py</url>
+          <line>244</line>
+          <option name="timeStamp" value="12" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/data_processing.py</url>
+          <line>245</line>
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/data_processing.py</url>
+          <line>248</line>
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">

@@ -107,6 +107,8 @@ class GraphicWindow(Frame):
     def pack(self):
         pass
 
+def launch():
+    pass
 
 if __name__ == '__main__':
 
@@ -118,4 +120,8 @@ if __name__ == '__main__':
     master = Frame(root)
     master.pack(fill=BOTH, expand=True)
     window = Window()
+
+    test = TimingDataHandler(['25.06.25'])
+    print(test.plan_data)
+
     root.mainloop()

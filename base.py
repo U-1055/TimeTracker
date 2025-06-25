@@ -1,5 +1,19 @@
 """Содержит функции и константы"""
 
+"""
+Структура json'ов: 
+   temp_json: {CURRENT_DEED: название дела, 
+               TIME_START: время старта (HH:MM:SS),
+               TIME_END: время окончания (HH:MM:SS)}
+
+   main_json: {FACT_TIME: 
+                [{NAME: название дела, 
+                 TIME: время (из StopWatchSelector) в секундах}], 
+                PLAN_TIME: 
+                [{NAME: ...,
+                 TIME: время согласно календарю (в секундах), 
+                 IGNORING_TIME: игнорируемые отрезки времени в формате HH:MM-HH:MM вида: ['time_start-time_end', ]}]}
+"""
 # Цвета
 COLOR1 = 'White'
 COLOR2 = 'Gray'
@@ -27,6 +41,10 @@ DEFAULT_TIME = '00:00:00'  # Начальный ввод в секундомер
 # Сообщения об ошибках
 HTTP_ERROR = 'Ошибка при извлечении данных из Google Calendar'
 SERVER_NOT_FOUND_ERROR = 'Ошибка при подключении к серверу'
+
+# ключи словаря plan_data (TimingDataHandler -> GraphicWindow)
+TASK_DATA = 'task_data'
+TIMING_DATA = 'timing_data'
 
 # ключи словаря temp_json
 CURRENT_DEED = "current_deed"

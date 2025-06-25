@@ -8,20 +8,21 @@ from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from base import (time_to_sec, calculate_time, time_to_format, CURRENT_DEED, TIME, TIME_MAIN, TIME_DEED, PLAN_TIME,
-                  FACT_TIME, NAME, CBOX_DEFAULT, TIME_START, TIME_END, HTTP_ERROR, SERVER_NOT_FOUND_ERROR, IGNORING_TIME)
+                  FACT_TIME, NAME, CBOX_DEFAULT, TIME_START, TIME_END, HTTP_ERROR, SERVER_NOT_FOUND_ERROR, IGNORING_TIME,
+                  TASK_DATA, TIMING_DATA, DEFAULT_TIME)
 
-"""Структура json'ов: 
+"""
+Структура json'ов: 
    temp_json: {CURRENT_DEED: название дела, 
                TIME_START: время старта (HH:MM:SS),
                TIME_END: время окончания (HH:MM:SS)}
                
-   main_json: {[FACT_TIME: 
-                {NAME: название дела, 
-                 TIME: время (из StopWatchSelector) в секундах}, 
+   main_json: {FACT_TIME: 
+                {<название дела>: {TIME: время (из StopWatchSelector) в секундах}}, 
                 PLAN_TIME: 
-                {NAME: ...,
-                 TIME: время согласно календарю (в секундах), 
-                 IGNORING_TIME: игнорируемые отрезки времени в формате HH:MM-HH:MM вида: ['time_start-time_end', ]}]}"""
+                {<название дела>:{TIME: время согласно календарю (в секундах), 
+                       IGNORING_TIME: игнорируемые отрезки времени в формате HH:MM-HH:MM вида: ['time_start-time_end', ]}}}
+"""
 
 PATH = 'data'
 DAYS = 'days'
@@ -115,7 +116,7 @@ class Saver:
 
         if not temp_json_path.is_file():
             temp_json_struct = {
-                CURRENT_DEED: CBOX_DEFAULT, TIME_MAIN: '00:00:00', TIME_DEED: '00:00:00'
+                CURRENT_DEED: CBOX_DEFAULT, TIME_MAIN: DEFAULT_TIME, TIME_DEED: DEFAULT_TIME
             }
             with open(temp_json_path, 'w') as temp:
                 json.dump(temp_json_struct, temp)
@@ -124,9 +125,15 @@ class Saver:
 
         if not main_json_path.is_file():
             main_json_struct = {
-                FACT_TIME: [{NAME: deed[NAME], TIME: '0'} for deed in processed_data],
-                PLAN_TIME: processed_data
+                FACT_TIME: {},  # NAME: {TIME: 'время в секундах'}
+                PLAN_TIME: {}
             }
+            for deed in processed_data:
+                main_json_struct[FACT_TIME][deed[NAME]] = {TIME: '0'}
+
+            for deed in processed_data:
+                main_json_struct[PLAN_TIME][deed[NAME]] = {TIME: deed[TIME], IGNORING_TIME: []}
+
             with open(main_json_path, 'w') as main_:
                 json.dump(main_json_struct, main_)
 
@@ -134,14 +141,13 @@ class Saver:
                 print(json.load(main_))  ###
 
     def save(self, data: dict):
+        deed_name = data[CURRENT_DEED]
         with open(temp_json_path, 'w') as temp:
-            json.dump({CURRENT_DEED: data[CURRENT_DEED], TIME_MAIN: data[TIME_MAIN], TIME_DEED: data[TIME_DEED]}, temp)
+            json.dump({CURRENT_DEED: deed_name, TIME_MAIN: data[TIME_MAIN], TIME_DEED: data[TIME_DEED]}, temp)
 
         with open(main_json_path, 'rb') as main_:
             main_data = json.load(main_)
-            for deed in main_data[FACT_TIME]:
-                if deed[NAME] == data[CURRENT_DEED]:
-                    deed[TIME] = time_to_sec(data[TIME_DEED])
+            main_data[FACT_TIME][deed_name][TIME] = time_to_sec(data[TIME_DEED])  #ToDo: рефакторил
 
         with open(main_json_path, 'w') as main_:
             json.dump(main_data, main_)
@@ -150,7 +156,7 @@ class Saver:
         """Обрабатывает day_data в пригодный для ввода в main_json формат. Удаляет повторяющиеся дела и суммирует их
            длительность, удаляет дела, начатые ранее 00:00 текущего дня.
            Пример: [{"name": deed1, "time_start": 23:00, "time_end": 03:00}, {"name": deed2, ""}]"""
-        # ToDo: желательно отрефакторить, порождает проблемы
+        # ToDo: желательно отрефакторить, порождает проблемы (убрать вложенную функцию)
         def rm_last_day():
             """Удаляет дела, начатые ранее 00:00 текущего дня"""
 
@@ -164,7 +170,7 @@ class Saver:
         rm_last_day()
         day_data = self.rm_deeds(indexes, day_data)
         indexes = []  # Очистить индексы, чтобы не удалить лишнее при втором вызове rm_deeds
-        deeds = [{NAME: deed[NAME], TIME: calculate_time(deed[TIME_START], deed[TIME_END]), IGNORING_TIME: []} for deed in day_data]
+        deeds = [{NAME: deed[NAME], TIME: calculate_time(deed[TIME_START], deed[TIME_END])} for deed in day_data]
 
         for idx, deed in enumerate(deeds):
 
@@ -195,9 +201,10 @@ class Saver:
         for last_deed, changed_deed in last_data, changed_data:
             deed_name = changed_deed[NAME]
             if deed_name != last_deed[NAME]:
-                return  # НЕ РАБОТАЕТ ПРИ УДАЛЕНИИ ДЕЛА
+                return  # НЕ РАБОТАЕТ ПРИ УДАЛЕНИИ / ПЕРЕИМЕНОВАНИИ ДЕЛА
             last_deed_time = calculate_time(last_deed[TIME_START], last_deed[TIME_END])
             changed_deed_time = calculate_time(changed_deed[TIME_START], changed_deed[TIME_END])
+
             pass
     def change_main_json(self, last_data: list[dict], changed_data: list[dict]):
         """Анализирует новый и старый план, на основе этого изменяет main_json"""
@@ -222,27 +229,24 @@ class Saver:
            Возвращает время дела."""
         with open(main_json_path, 'rb') as main_:
             main_data = json.load(main_)
-        for deed in main_data[FACT_TIME]:
-            if deed[NAME] == deed_name:
-                return time_to_format(int(deed[TIME]))
+
+        return time_to_format(int(main_data[FACT_TIME][deed_name][TIME]))  # ToDo: рефакторил
 
     @staticmethod
     def change_ignoring_time(deed_name: str, time_start: str, time_end: str, ignoring: bool):
-        """Предназначен для вызова из Deed. Меняет IGNORING_TIME дела deed_name. Если ignoring = 1: прибавляет
-           разницу между time_end и time_start, если 0: отнимает"""
-        time_view = f'{time_start}-{time_end}'  # ToDo: попробовать избежать хардкода
+        """Предназначен для вызова из Deed. Меняет IGNORING_TIME дела deed_name. Если ignoring = True: прибавляет
+           разницу между time_end и time_start, если False: отнимает"""
+        time_view = f'{time_start}-{time_end}'
 
         with open(main_json_path, 'rb') as main_:
             deeds_data = json.load(main_)
 
-        for deed in deeds_data[PLAN_TIME]:
-            if deed[NAME] == deed_name:
-                if ignoring:  # Если ignoring - добавить время
-                    deed[IGNORING_TIME].append(time_view)
-                else:
-                    if time_view in deed[IGNORING_TIME]:
-                        deed[IGNORING_TIME].remove(time_view)  # На всякий случай, предполагается, что при ignoring = 0 элемент уже есть в списке
-                break
+        deed = deeds_data[PLAN_TIME][deed_name]
+        if ignoring:  # Если ignoring - добавить время
+            deed[IGNORING_TIME].append(time_view)
+        else:
+            if time_view in deed[IGNORING_TIME]:
+                deed[IGNORING_TIME].remove(time_view)  # На всякий случай, предполагается, что при ignoring = 0 элемент уже есть в списке
 
         with open(main_json_path, 'w') as main_:
             json.dump(deeds_data, main_)
@@ -251,11 +255,11 @@ class Saver:
     def get_deed_state(time_start: str, time_end) -> int:
         """Вызывается из Deed при запуске. Возвращает состояние changing_btn в Deed, если f"{time_start}-{time_end}" есть в
            IGNORING_TIME - 1, если нет - 0."""
-        time_view = f'{time_start}-{time_end}' # ToDo: попробовать избежать хардкода
+        time_view = f'{time_start}-{time_end}'
 
         with open(main_json_path, 'rb') as main_:
             deeds_data = json.load(main_)
-        for deed in deeds_data[PLAN_TIME]:
+        for deed in deeds_data[PLAN_TIME].values():  # ToDo: рефакторил
             if time_view in deed[IGNORING_TIME]:
                 return 1
         return 0
@@ -279,29 +283,81 @@ class Saver:
 
 
 class TimingDataHandler:
-    """Обрабатывает данные о соответствии плану и возвращает их в GraphicWindow"""
-    timing_data: list[dict]
+    """Обрабатывает данные о соответствии плану и возвращает их в GraphicWindow. Структура возвращаемого словаря:
+       {TIMING_DATA: [{дата (dd:mm:yy): процент соответствия плану (0-100)}, ...]
+        TASK_DATA: {задача: {FACT_TIME: потраченное на задачу время (HH), PLAN_TIME: запланированное время(HH)}, ...}"""
+
+    plan_data: dict[list[dict], list[dict]]
     DAYS_PATH = pathlib.Path(PATH, DAYS)
 
     def __init__(self, dates: list[str]):
-        self.timing_data = []
-        for date in dates:
-            deeds_data = self.take_data(date)
-            if deeds_data:  # Если файл date.json существует
-                self.timing_data.append(self.calculate_timing(deeds_data))
+        self.plan_data = {TIMING_DATA: [], TASK_DATA: []}
+        for date_ in dates:
+            deeds_data = self.process_data(self.take_data(date_))
+            if deeds_data:  # Если файл <date>.json существует
+                self.plan_data[TIMING_DATA].append(self.calculate_timing(deeds_data, date_))
 
-    def take_data(self, date: str) -> list[dict] | bool:
+    def take_data(self, date: str) -> dict | bool:
         """Возвращает данные из main_json'a за день, указанный в date"""
         json_path = pathlib.Path(self.DAYS_PATH, f'{date}.json')
         if not json_path.is_file():  # Проверка на существование файла
             return False
         with open(json_path, 'rb') as main_:
-            return self.process_data(json.load(main_))
+            return json.load(main_)
 
-    def process_data(self, deeds_data: list[dict]) -> list[dict]:
-        """Вычитает игнорируемое время (ignoring_time) из запланированного. Возвращает словарь дня с вычтенным
-           игнорированным временем и отсутствующим "ignoring_time"."""
-        return [{NAME: deed[NAME], TIME: int(deed[TIME]) - int(deed[IGNORING_TIME])} for deed in deeds_data]
+    def process_data(self, deeds_data: dict) -> dict:
+        """Вычитает игнорируемое время (ignoring_time) из запланированного. Удаляет дела, где TIME (в PLAN_TIME) = 0 (чтобы избежать помех в расчётах)
+           Возвращает словарь дня с вычтенным игнорированным временем и отсутствующим "ignoring_time"."""
+        deleting_keys = []
+        for deed_key in deeds_data[PLAN_TIME]:  # Проход по значениям словаря
+            deed = deeds_data[PLAN_TIME][deed_key]
+            deed[TIME] = str(int(deed[TIME]) - self.process_ignoring_time(deed[IGNORING_TIME]))
+            deed.pop(IGNORING_TIME)
+            if deed[TIME] == '0':
+                deleting_keys.append(deed_key)  # Добавление ключа в удаляемые
 
-    def calculate_timing(self, deeds_data: list[dict]) -> dict:
-        """Вычисляет соответствие плану."""
+        for key in deleting_keys:
+            deeds_data[PLAN_TIME].pop(key)
+            deeds_data[FACT_TIME].pop(key)
+
+        return deeds_data
+
+    def process_ignoring_time(self, times: list) -> int:
+        """Обрабатывает игнорируемое время. Переводит в секунды и складывает значения игнорируемого времени из списка вида:
+           ["время_начала(HH:MM)-время_окончания(HH:MM)", ...]"""
+        ignoring_time = 0
+        for time_ in times:
+            spl_time = time_.split('-')
+            ignoring_time += calculate_time(spl_time[0], spl_time[1])
+
+        return ignoring_time
+
+    def calculate_timing(self, deeds_data: dict, date_: str) -> dict:
+        """Вычисляет соответствие плану. Возвращает словарь для TIMING_DATA вида: {дата (dd:mm:yy): процент соответствия плану (0-100)}"""
+        time_sum = 0
+        deeds = 0
+        for deed_key in deeds_data[FACT_TIME]:  # в main_json дела всегда идут в одном порядке в PLAN- и FACT_TIME
+            fact_deed = deeds_data[FACT_TIME][deed_key]  # дело из FACT_TIME
+            plan_deed = deeds_data[PLAN_TIME][deed_key]  # соответствующее дело из PLAN_TIME
+
+            fact_deed_time = int(fact_deed[TIME])
+            plan_deed_time = int(plan_deed[TIME])
+            deeds += 1
+
+            if fact_deed_time >= plan_deed_time and plan_deed_time != 1:  # Если FACT_TIME >= PLAN_TIME - соответствие 100-процентное
+                time_sum += 100  # plan_deed_time != 1 нужно для случая с полным игнорированием дела, когда TIME = 0, в этом случае дело не может быть выполнено.
+            else:
+
+                time_sum += 100 - (((plan_deed_time - fact_deed_time) / plan_deed_time) * 100)  # Вычисляем соответствие
+
+        time_sum += time_sum // deeds  # Прибавляем среднее арифметическое всех задач (значение общего соблюдения плана)
+        deeds += 1  # Количество прибавлений к time_sum увеличилось (прибавили среднее арифметическое)
+        return {date_: round(time_sum // deeds, 2)}
+
+    def calculate_task_data(self, deeds_data: list[dict], date_: str) -> dict:
+        """Вычисляет время, выделяемое на задачи в течение дня. Проверяет наличие задачи в plan_data[TASK_DATA], если есть -
+           добавляет FACT_TIME и PLAN_TIME к соответствующим ключам словаря задачи, если нет - добавляет словарь с FACT_TIME и
+           PLAN_TIME"""
+
+
+

@@ -231,6 +231,7 @@ class DeedsPanel(Frame):
         for deed in self.deeds:
             deed.destroy()
 
+
 class Deed(Frame):
     """Виджет дела (мероприятия), размещаемый на панели DeedsPanel. Параметр change_saver принимает static-метод класса
        Saver для добавления времени дела в игнорируемое время (main_json[plan_time][ignoring_time])"""
@@ -289,7 +290,7 @@ class Deed(Frame):
 
 class Menu(Frame):
 
-    def __init__(self, parent, buttons: tuple): #Параметры кнопок
+    def __init__(self, parent, buttons: tuple):  # Параметры кнопок
         super().__init__(master=parent, bg=COLOR3)
         self.buttons = buttons
 
