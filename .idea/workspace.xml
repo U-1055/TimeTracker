@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Определена логика изменения плана на уровне Window; начал определять логику на уровне Saver'а">
+    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Изменена структура main_json. Написана большая часть обработчика TimingDataHandler.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/base.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing.py" afterDir="false" />
@@ -57,8 +57,8 @@
     "ASKED_ADD_EXTERNAL_FILES": "true",
     "Python tests.Python tests in tests.py.executor": "Run",
     "Python.base.executor": "Run",
-    "Python.data_processing.executor": "Run",
-    "Python.main.executor": "Run",
+    "Python.data_processing.executor": "Debug",
+    "Python.main.executor": "Debug",
     "Python.widgets.executor": "Run",
     "git-widget-placeholder": "master",
     "settings.editor.selected.configurable": "preferences.keymap"
@@ -184,7 +184,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750770481945</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Изменена структура main_json. Написана большая часть обработчика TimingDataHandler.">
+      <option name="closed" value="true" />
+      <created>1750849675304</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1750849675304</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -200,25 +208,56 @@
     <MESSAGE value="Доделки (сделано удаление temp_json)" />
     <MESSAGE value="Добавлена система игнорирования дел, отмеченных пользователем" />
     <MESSAGE value="Определена логика изменения плана на уровне Window; начал определять логику на уровне Saver'а" />
-    <option name="LAST_COMMIT_MESSAGE" value="Определена логика изменения плана на уровне Window; начал определять логику на уровне Saver'а" />
+    <MESSAGE value="Изменена структура main_json. Написана большая часть обработчика TimingDataHandler." />
+    <option name="LAST_COMMIT_MESSAGE" value="Изменена структура main_json. Написана большая часть обработчика TimingDataHandler." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>244</line>
+          <line>283</line>
           <option name="timeStamp" value="12" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>245</line>
+          <line>284</line>
           <option name="timeStamp" value="13" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>248</line>
+          <line>287</line>
           <option name="timeStamp" value="14" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/data_processing.py</url>
+          <line>318</line>
+          <option name="timeStamp" value="20" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/data_processing.py</url>
+          <line>247</line>
+          <option name="timeStamp" value="24" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/data_processing.py</url>
+          <line>246</line>
+          <option name="timeStamp" value="25" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/data_processing.py</url>
+          <line>245</line>
+          <option name="timeStamp" value="26" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/data_processing.py</url>
+          <line>228</line>
+          <option name="timeStamp" value="27" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/data_processing.py</url>
+          <line>225</line>
+          <option name="timeStamp" value="28" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -229,5 +268,12 @@
         </breakpoint>
       </default-breakpoints>
     </breakpoint-manager>
+    <watches-manager>
+      <configuration name="PythonConfigurationType">
+        <watch expression="api_data" />
+        <watch expression="api_data" />
+        <watch expression="api_data" />
+      </configuration>
+    </watches-manager>
   </component>
 </project>

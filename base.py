@@ -1,19 +1,5 @@
 """Содержит функции и константы"""
 
-"""
-Структура json'ов: 
-   temp_json: {CURRENT_DEED: название дела, 
-               TIME_START: время старта (HH:MM:SS),
-               TIME_END: время окончания (HH:MM:SS)}
-
-   main_json: {FACT_TIME: 
-                [{NAME: название дела, 
-                 TIME: время (из StopWatchSelector) в секундах}], 
-                PLAN_TIME: 
-                [{NAME: ...,
-                 TIME: время согласно календарю (в секундах), 
-                 IGNORING_TIME: игнорируемые отрезки времени в формате HH:MM-HH:MM вида: ['time_start-time_end', ]}]}
-"""
 # Цвета
 COLOR1 = 'White'
 COLOR2 = 'Gray'

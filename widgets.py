@@ -25,6 +25,14 @@ class ComboBox(Combobox):
 
         return output_values
 
+    def clear(self):
+        """Вызывается из StopWatchSelector при изменении плана. Очищает список дел"""
+        self.configure(values=[])
+
+    def load_deeds(self, deeds: tuple):
+        """Загружает названия дел в Combobox"""
+        self.configure(values=self.process_values(deeds))
+
 
 class StopWatchSelector(Frame):
 
@@ -108,12 +116,17 @@ class StopWatchSelector(Frame):
         self.sw_insert(self.wdg_deed_swatch, deed_data[TIME_DEED])
         self.change_wdg_state(self.LAUNCH)  # Изменение состояния
 
+    def load_deeds(self, deeds: tuple):
+        """Загружает список дел в Combobox"""
+        self.wdg_selector.load_deeds(deeds)
+
     def to_default(self):
         """Вызывается из Window при изменении плана. Устанавливает начальные значения в """
         self.wdg_selector.set(CBOX_DEFAULT)
         self.sw_insert(self.wdg_main_swatch, DEFAULT_TIME)
         self.sw_insert(self.wdg_deed_swatch, DEFAULT_TIME)
         # В данном случае из Window последовательно вызываются to_default и load_deed, т.е. состояние будет изменено на состояние при запуске
+
     def change_wdg_state(self, event: str):
         """Меняет состояние wdg_selector, start_btn и stop_btn в зависимости от события"""
         if event == self.START:

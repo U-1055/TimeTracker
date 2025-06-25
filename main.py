@@ -24,7 +24,8 @@ class Window:
         self.saving_thread.start()
 
         if self.saver.in_process():  # Если день не закончен
-            self.wdg_stop_watch.load_deed(self.saver.get_temp_json())  # Загружает дело из temp_json в StopWatchSelector
+            if not self.saver.compare_plans():
+                self.change_plan()
 
     def place_widgets(self):
         master.columnconfigure(0, weight=1)
@@ -50,22 +51,26 @@ class Window:
         save_btn.grid(row=1, column=3)
 
         change_btn = CTkButton(wdg_frame, text=CHANGE_PLAN_TEXT, command=self.change_plan)
+        change_btn.grid(row=2, column=5)
 
     def change_plan(self):
         """Вызывается при изменении плана. Вызывает соответствующие методы у Saver, DeedsPanel и StopWatchSelector"""
         if self.saver.compare_plans():  # План без изменений?
             return
-        self.saving = False
-
-        self.save()  # Сохраняет текущий план
-        self.saver.change_plan()  # Запускает изменение плана
+        self.to_default()
+        self.saver.change_plan()
         self.day_data = self.saver.day_data
-
-        self.wdg_stop_watch.to_default()  # Загрузка новых данных в StopWatchSelector
         self.wdg_stop_watch.load_deed(self.saver.get_temp_json())
-
-        self.deeds_panel.clear_panel()  # Загрузка новых данных в DeedsPanel
         self.load_to_deeds_panel()
+        self.saving = True
+
+    def to_default(self):
+        """Сохраняет план, останавливает цикл сохранения, устанавливает виджеты в состояния по умолчанию. Вызывается при
+           изменении плана"""
+        self.save()
+        self.saving = False
+        self.wdg_stop_watch.to_default()
+        self.deeds_panel.clear_panel()
 
     def save(self):
         self.saver.save(self.wdg_stop_watch.get_current_data())
@@ -120,8 +125,5 @@ if __name__ == '__main__':
     master = Frame(root)
     master.pack(fill=BOTH, expand=True)
     window = Window()
-
-    test = TimingDataHandler(['25.06.25'])
-    print(test.plan_data)
 
     root.mainloop()
