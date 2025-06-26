@@ -293,6 +293,22 @@ class Saver:
             saved_data[deed_key] = {TIME: saved_plan[PLAN_TIME][deed_key][TIME]}
         return api_data == saved_data
 
+    def process_to_plan(self, data_: list[dict]) -> dict:
+        """Обрабатывает данные от process_day_data в словарь для ключа PLAN_TIME main_json. Пример:
+           [{NAME: deed#1, TIME: 9000}] -> {deed#1: {TIME: 9000, IGNORING_TIME: []}}"""
+        deeds_data = {}
+        for deed in data_:
+            deeds_data[deed[NAME]] = {TIME: deed[TIME], IGNORING_TIME: []}
+        return deeds_data
+
+    def process_to_fact(self, data_: list[dict]) -> dict:
+        """Обрабатывает данные от process_day_data в словарь для ключа FACT_TIME main_json. Пример:
+           [{NAME: deed#1, TIME: 9000}] -> {deed#1: {TIME: '0'}}"""
+        deeds_data = {}
+        for deed in data_:
+            deeds_data[deed[NAME]] = {TIME: '0'}
+        return deeds_data
+
     def get_temp_json(self) -> dict:
         """Возвращает temp_json"""
         with open(temp_json_path, 'rb') as temp:
@@ -334,6 +350,7 @@ class TimingDataHandler:
             deed = deeds_data[PLAN_TIME][deed_key]
             deed[TIME] = str(int(deed[TIME]) - self.process_ignoring_time(deed[IGNORING_TIME]))
             deed.pop(IGNORING_TIME)
+
             if deed[TIME] == '0':
                 deleting_keys.append(deed_key)  # Добавление ключа в удаляемые
 

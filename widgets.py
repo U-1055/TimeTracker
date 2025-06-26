@@ -54,7 +54,6 @@ class StopWatchSelector(Frame):
         }
 
         self.place_widgets()
-        self.change_wdg_state(self.LAUNCH)
         self.counting = False  # Идёт ли отсчёт
 
     def place_widgets(self):
@@ -63,6 +62,7 @@ class StopWatchSelector(Frame):
 
         self.columnconfigure(0, weight=2)
         self.columnconfigure(1, weight=1)
+
 
         self.wdg_selector = ComboBox(self, self.values)
         self.wdg_selector.grid(row=0, column=0, columnspan=2, sticky=W + E)
@@ -73,7 +73,7 @@ class StopWatchSelector(Frame):
         self.sw_insert(self.wdg_main_swatch, DEFAULT_TIME)
 
         self.wdg_deed_swatch = CTkEntry(self)
-        self.wdg_deed_swatch.grid(row=1, column=1, sticky=W)
+        self.wdg_deed_swatch.grid(row=1, column=1, sticky=W + E)
         self.sw_insert(self.wdg_deed_swatch, DEFAULT_TIME)
 
         self.start_btn = CTkButton(self, text=START_TEXT, state=start_btn_state, command=self.start)
@@ -252,7 +252,8 @@ class DeedsPanel(Frame):
 
 class Deed(Frame):
     """Виджет дела (мероприятия), размещаемый на панели DeedsPanel. Параметр change_saver принимает static-метод класса
-       Saver для добавления времени дела в игнорируемое время (main_json[plan_time][ignoring_time])"""
+       Saver для добавления времени дела в игнорируемое время (main_json[plan_time][ignoring_time]); state_checker -
+       static-метод класса Saver для получения состояния виджета (игнорируется/не игнорируется)"""
 
     def __init__(self, master, deed_name: str, time_start: str, time_end: str, color: str, text_color: str,
                  change_saver, state_checker):
@@ -308,22 +309,36 @@ class Deed(Frame):
 
 class Menu(Frame):
 
-    def __init__(self, parent, buttons: tuple):  # Параметры кнопок
-        super().__init__(master=parent, bg=COLOR3)
+    def __init__(self, parent, window_now, buttons: tuple):  # Параметры кнопок
+        super().__init__(master=parent, bg='Black')
         self.buttons = buttons
+        self.window_now = window_now
 
     def place_widgets(self):
-        for row, args in enumerate(self.buttons):
-            button = CTkButton(args)
-            button.grid(row=row, column=0)
+        for row, btn in self.buttons:
+            btn.configure(master=self)
+            btn.grid(row=row, column=0)
 
+    def change_window(self):
+        self.window_now.pack_forget()
 
 class DialogWindow(Frame):
-    def __init__(self, master, text: str, command=None):
+    def __init__(self, master, text: str, args: list, command=None):
         super().__init__(master=master)
+        self.args = args
+        self.command = command
+
+        lbl = Label(self, text=text)
+        lbl.grid(row=0, column=0, columnspan=3)
+
+        btn = CTkButton(self, text='OK', command=self.action)
+        btn.grid(row=0, column=1)
+
+    def action(self):
+        """Вызывается при нажатии на кнопку"""
+        if self.command is not None:
+            self.command(self.args)
+        self.destroy()
 
 
-    def grid(self):
-        pass
-    def pack(self):
-        pass
+

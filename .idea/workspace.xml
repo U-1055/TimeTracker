@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Небольшие доделки в изменении плана. Выяснилось, что оно работает не так, как надо">
+    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Переделано и упрощено изменение плана">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
@@ -199,7 +199,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750858056625</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Переделано и упрощено изменение плана">
+      <option name="closed" value="true" />
+      <created>1750921439581</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1750921439581</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -217,39 +225,20 @@
     <MESSAGE value="Определена логика изменения плана на уровне Window; начал определять логику на уровне Saver'а" />
     <MESSAGE value="Изменена структура main_json. Написана большая часть обработчика TimingDataHandler." />
     <MESSAGE value="Небольшие доделки в изменении плана. Выяснилось, что оно работает не так, как надо" />
-    <option name="LAST_COMMIT_MESSAGE" value="Небольшие доделки в изменении плана. Выяснилось, что оно работает не так, как надо" />
+    <MESSAGE value="Переделано и упрощено изменение плана" />
+    <option name="LAST_COMMIT_MESSAGE" value="Переделано и упрощено изменение плана" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>258</line>
-          <option name="timeStamp" value="12" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>259</line>
-          <option name="timeStamp" value="13" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>262</line>
-          <option name="timeStamp" value="14" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/widgets.py</url>
-          <line>130</line>
+          <line>129</line>
           <option name="timeStamp" value="40" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>27</line>
-          <option name="timeStamp" value="42" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/main.py</url>
-          <line>71</line>
+          <line>84</line>
           <option name="timeStamp" value="43" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
