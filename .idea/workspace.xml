@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Изменена структура main_json. Написана большая часть обработчика TimingDataHandler.">
+    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Небольшие доделки в изменении плана. Выяснилось, что оно работает не так, как надо">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/base.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/widgets.py" beforeDir="false" afterPath="$PROJECT_DIR$/widgets.py" afterDir="false" />
@@ -58,7 +57,7 @@
     "Python tests.Python tests in tests.py.executor": "Run",
     "Python.base.executor": "Run",
     "Python.data_processing.executor": "Debug",
-    "Python.main.executor": "Debug",
+    "Python.main.executor": "Run",
     "Python.widgets.executor": "Run",
     "git-widget-placeholder": "master",
     "settings.editor.selected.configurable": "preferences.keymap"
@@ -192,7 +191,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750849675304</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Небольшие доделки в изменении плана. Выяснилось, что оно работает не так, как надо">
+      <option name="closed" value="true" />
+      <created>1750858056625</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1750858056625</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -209,55 +216,71 @@
     <MESSAGE value="Добавлена система игнорирования дел, отмеченных пользователем" />
     <MESSAGE value="Определена логика изменения плана на уровне Window; начал определять логику на уровне Saver'а" />
     <MESSAGE value="Изменена структура main_json. Написана большая часть обработчика TimingDataHandler." />
-    <option name="LAST_COMMIT_MESSAGE" value="Изменена структура main_json. Написана большая часть обработчика TimingDataHandler." />
+    <MESSAGE value="Небольшие доделки в изменении плана. Выяснилось, что оно работает не так, как надо" />
+    <option name="LAST_COMMIT_MESSAGE" value="Небольшие доделки в изменении плана. Выяснилось, что оно работает не так, как надо" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>283</line>
+          <line>258</line>
           <option name="timeStamp" value="12" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>284</line>
+          <line>259</line>
           <option name="timeStamp" value="13" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>287</line>
+          <line>262</line>
           <option name="timeStamp" value="14" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>318</line>
-          <option name="timeStamp" value="20" />
+          <url>file://$PROJECT_DIR$/widgets.py</url>
+          <line>130</line>
+          <option name="timeStamp" value="40" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>27</line>
+          <option name="timeStamp" value="42" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>71</line>
+          <option name="timeStamp" value="43" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>247</line>
-          <option name="timeStamp" value="24" />
+          <line>203</line>
+          <option name="timeStamp" value="46" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>246</line>
-          <option name="timeStamp" value="25" />
+          <line>205</line>
+          <option name="timeStamp" value="47" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>245</line>
-          <option name="timeStamp" value="26" />
+          <line>213</line>
+          <option name="timeStamp" value="49" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>228</line>
-          <option name="timeStamp" value="27" />
+          <line>211</line>
+          <option name="timeStamp" value="50" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>225</line>
-          <option name="timeStamp" value="28" />
+          <line>209</line>
+          <option name="timeStamp" value="51" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/data_processing.py</url>
+          <line>293</line>
+          <option name="timeStamp" value="52" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -273,6 +296,7 @@
         <watch expression="api_data" />
         <watch expression="api_data" />
         <watch expression="api_data" />
+        <watch expression="l_name" />
       </configuration>
     </watches-manager>
   </component>

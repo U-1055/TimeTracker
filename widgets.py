@@ -14,6 +14,7 @@ class ComboBox(Combobox):
     def __init__(self, parent, values: tuple, state: str = NORMAL):
         super().__init__(master=parent, state=READONLY)
         self.configure(values=self.process_values(values))
+        self.set(CBOX_DEFAULT)
 
     def process_values(self, values: tuple) -> list:
         """Удаляет из кортежа входящих значений дубликаты элементов. Пример: ("name", "name") -> ["name"] """
@@ -53,6 +54,7 @@ class StopWatchSelector(Frame):
         }
 
         self.place_widgets()
+        self.change_wdg_state(self.LAUNCH)
         self.counting = False  # Идёт ли отсчёт
 
     def place_widgets(self):
@@ -122,6 +124,9 @@ class StopWatchSelector(Frame):
 
     def to_default(self):
         """Вызывается из Window при изменении плана. Устанавливает начальные значения в """
+        if self.counting:
+            self.stop()
+
         self.wdg_selector.set(CBOX_DEFAULT)
         self.sw_insert(self.wdg_main_swatch, DEFAULT_TIME)
         self.sw_insert(self.wdg_deed_swatch, DEFAULT_TIME)
@@ -277,7 +282,7 @@ class Deed(Frame):
 
         self.changing_btn = CTkSwitch(self, bg_color=self.color, text=IGNORING_TEXT, command=self.change_ign_state, font=COMMON_FONT,
                                       text_color=self.text_color)
-        self.changing_btn.grid(row=2, column=2)
+        self.changing_btn.grid(row=1, column=2)
 
     def change_ign_state(self):
         """Обёртка над change_saver. Передаёт в change_saver состояние кнопки changing_btn и вызывает change_wdg_state

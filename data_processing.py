@@ -137,16 +137,14 @@ class Saver:
             with open(main_json_path, 'w') as main_:
                 json.dump(main_json_struct, main_)
 
-            with open(main_json_path, 'r') as main_:  ###
-                print(json.load(main_))  ###
-
     def save(self, data: dict):
+        """Сохраняет данные в temp_json и main_json."""
         deed_name = data[CURRENT_DEED]
 
         with open(main_json_path, 'rb') as main_:
             main_data = json.load(main_)
 
-        if deed_name not in main_data.keys():
+        if deed_name not in main_data[FACT_TIME].keys():
             return
 
         main_data[FACT_TIME][deed_name][TIME] = time_to_sec(data[TIME_DEED])
@@ -194,66 +192,43 @@ class Saver:
         return [deed for idx, deed in enumerate(deeds) if not idx in indexes]
 
     def change_plan(self):
-        """Анализирует и записывает в main_json изменённый план. Если дело добавлено и оно начинается раньше текущего
-           времени, то в PLAN_TIME TIME соответствующего дела заносится разница между текущим временем и временем окончания
-           дела, в противном случае - разница между TIME_END и TIME_START дела.
-           если удалено - удаляет из JSON, если уменьшено время дела, заканчивающегося РАНЬШЕ текущего времени ИЛИ
-           если изменено время дела, заканчивающегося ПОЗЖЕ текущего времени - время в PLAN_TIME соответствующего дела
-           меняется на изменённое. Случай с переименованием дела считается удалением дела со старым именем и добавлением
-           дела с новым именем. Случай увеличения времени дела, заканчивающегося раньше текущего времени не обрабатывается
-           и время в PLAN_TIME остаётся прежним, т.к. выполнить это дело на 100% пользователь легально уже не сможет,
-           следовательно, дело не должно меняться, чтобы не создавать проблем при расчёте в TimingDataHandler."""
+        """Записывает в PLAN_TIME изменённый план. Внимание: все IGNORING_TIME при этом удаляются"""
+
+        def check_delete(changed_names: list, last_names: list, deeds: dict):
+            """Проверяет новый план на предмет удалённых или добавленных дел, добавляет или удаляет соответствующие дела
+               из FACT_TIME."""
+            to_delete = []
+            to_add = []
+            for c_name, l_name in zip(changed_names, last_names):
+                if c_name not in last_names:  #  дело добавлено
+                    to_add.append(c_name)
+                if l_name not in changed_names:  # дело удалено
+                    to_delete.append(l_name)
+
+            for key in list(deeds[FACT_TIME].keys()):
+                if key in to_delete:
+                    deeds[FACT_TIME].pop(key)
+                if key in to_add:
+                    deeds[FACT_TIME][key] = {TIME: '0'}
+
+            return deeds
 
         with open(main_json_path, 'rb') as main_:
             deeds_data = json.load(main_)
 
-        last_data = self.day_data
         changed_data = self.api_processor.get_data()
 
-        last_deeds = [deed[NAME] for deed in last_data]  # список названий дел в старом плане
-        changed_deeds = [deed[NAME] for deed in changed_data]
+        deeds_data[PLAN_TIME] = {}
+        processed_data = self.process_day_data(changed_data)
+        for deed in processed_data:
+            deeds_data[PLAN_TIME][deed[NAME]] = {TIME: deed[TIME], IGNORING_TIME: []}
 
-        current_time = datetime.datetime.now().time().strftime("%H:%M")  # Текущее время
-        plan_time = deeds_data[PLAN_TIME]
-
-        for last_deed, changed_deed in zip(last_data, changed_data):
-            deed_name = last_deed[NAME]
-            if last_deed[NAME] in last_deeds:  # дело осталось в плане
-                l_deed_time = calculate_time(last_deed[TIME_START], last_deed[TIME_END])
-                c_deed_time = calculate_time(changed_deed[TIME_START], changed_deed[TIME_END])
-
-                if self.compare_time_points(changed_deed[TIME_END], current_time) == self.EARLIER:  # дело заканчивается раньше текущего времени
-                    if c_deed_time < l_deed_time:  # время дела уменьшилось
-                        plan_time[deed_name][TIME] = c_deed_time  # смена времени
-                else:  # дело заканчивается позже текущего времени
-                    if l_deed_time != c_deed_time:  # если время изменилось - изменить PLAN_TIME
-                        plan_time[deed_name][TIME] = c_deed_time
-
-            elif last_deed[NAME] not in changed_deeds:  # дело удалено
-                deeds_data[PLAN_TIME].pop(last_deed[NAME])
-                deeds_data[FACT_TIME].pop(last_deed[NAME])
-
-            else:  # дело добавлено
-                deed_name = changed_deed[NAME]  # новое название дела
-                deeds_data[FACT_TIME][deed_name] = {TIME: '0'}
-                if self.compare_time_points(changed_deed[TIME_START], current_time) == self.EARLIER:  # дело начинается раньше текущего времени
-                    deeds_data[PLAN_TIME][deed_name] = {TIME: calculate_time(current_time, changed_deed[TIME_END]),
-                                                        IGNORING_TIME: []}
-                else:
-                    deeds_data[PLAN_TIME][deed_name] = {TIME: calculate_time(changed_deed[TIME_START], changed_deed[TIME_END]),
-                                                        IGNORING_TIME: []}
+        deeds_data = check_delete([deed[NAME] for deed in changed_data], deeds_data[FACT_TIME].keys(), deeds_data)  #  проверка на добавленные/удалённые дела
 
         self.day_data = changed_data
         with open(main_json_path, 'w') as main_:
-            print(deeds_data)
+            assert len(deeds_data[FACT_TIME].keys()) == len(deeds_data[PLAN_TIME].keys()), 'Должно быть однинаковое число дел'
             json.dump(deeds_data, main_)
-
-    def compare_time_points(self, comparing_time: str, time_: str):
-        """Сравнивает comparing_time с time_ в формате HH:MM."""
-        if calculate_time(comparing_time, time_) >= 0:  # Например, 12:00 и 13:00 -> 13:00 - 12:00 > 0 -> 12:00 раньше
-            return self.EARLIER
-        else:  # В противном случае - позже. Если метки равны, то возвращается EARLIER
-            return self.LATER
 
     def finish_day(self):
         """Вызывается из MainWindow для завершения дня"""
