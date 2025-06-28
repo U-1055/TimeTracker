@@ -84,7 +84,7 @@ class APIProcessor:
         plan_struct = []
         for num, deed in enumerate(data_[self.ITEMS]):
 
-            plan_struct.append(
+            plan_struct.append(   # ToDo:  продумать проверку на отсутствие 'summary' (возможно если у дела нет заголовка (в календаре отображается как: (Нет заголовка)))
                 {NAME: deed[self.SUMMARY].strip(),  # Удаляет пробелы
                  TIME_START: date_to_time(deed[self.START][self.DATE_TIME]),
                  TIME_END: date_to_time(deed[self.END][self.DATE_TIME])})

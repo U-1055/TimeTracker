@@ -6,6 +6,7 @@ from threading import Thread
 from widgets import StopWatchSelector, DeedsPanel, Menu
 from data_processing import Saver, TimingDataHandler
 from base import DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME, NAME, FINISH_DAY_TEXT, COLOR1, COLOR3, COLOR2, CHANGE_PLAN_TEXT
+ # ToDo: убрать assert'ы !!!
 
 
 class Window(Frame):
@@ -46,8 +47,9 @@ class Window(Frame):
         finish_btn = CTkButton(wdg_frame, text=FINISH_DAY_TEXT, fg_color=DEED_COLOR1, command=self.finish_day)
         finish_btn.grid(row=1, column=4)
 
-        self.wdg_stop_watch = StopWatchSelector(wdg_frame, tuple(deed[NAME] for deed in self.day_data), self.saver.get_deed) # секундомер
+        self.wdg_stop_watch = StopWatchSelector(wdg_frame, self.saver.get_deed) # секундомер
         self.wdg_stop_watch.grid(row=0, column=0, columnspan=2, sticky=W + E + N + S)
+        self.wdg_stop_watch.load_deeds(tuple(deed[NAME] for deed in self.day_data))
 
         # панель с планом
         self.deeds_panel = DeedsPanel(self, self.saver.change_ignoring_time, self.saver.get_deed_state)
@@ -73,6 +75,7 @@ class Window(Frame):
         self.saver.change_plan()
         self.day_data = self.saver.day_data
         self.wdg_stop_watch.load_deed(self.saver.get_temp_json())
+        self.wdg_stop_watch.load_deeds(tuple(deed[NAME] for deed in self.day_data))
         self.load_to_deeds_panel()
 
         self.saving = True
@@ -108,8 +111,23 @@ class Window(Frame):
     def saving_cycle(self):
         """Цикл сохранения. Раз в SAVE_CYCLE_TIME сек. сохраняет данные из StopWatchSelector."""
         while self.saving:
+            print("Saving...")
             time.sleep(SAVE_CYCLE_TIME)
             self.save()
+
+    def collapse_window(self):
+        """Вызывается при уничтожении виджета через Menu. Останавливает отсчёт в StopWatchSelector, останавливает
+           цикл сохранения и сохраняет данные, после чего уничтожает виджет."""
+        self.saving = False
+        self.wdg_stop_watch.stop()
+        self.save()
+        self.grid_forget()
+
+    def place_window(self):
+        """Вызывается при размещении окна после вызова collapse_window. Запускает saving_cycle и размещает виджет"""
+        self.saving = True
+        self.grid(row=0, column=1, sticky=W + E + N + S)
+
 
 class GraphicWindow(Frame):
     """Окно с графиком"""
@@ -121,6 +139,12 @@ class GraphicWindow(Frame):
 
     def place_widgets(self):
         pass
+
+    def collapse_window(self):
+        self.grid_forget()
+
+    def place_window(self):
+        self.grid(row=0, column=1, sticky=W + E + N + S)
 
 
 def launch():
@@ -138,7 +162,9 @@ def launch():
 
     window = Window(master)
     window.grid(row=0, column=1, sticky=W + E + N + S)
-    menu = Menu(master, window, (Button(bg=DEED_COLOR1, text='*'),))
+    graphic = GraphicWindow(master)
+
+    menu = Menu(master, window, {'ТМ': window, 'СТ': graphic})
     menu.grid(row=0, column=0, sticky=W + E + N + S)
 
     root.mainloop()

@@ -1,5 +1,6 @@
+import tkinter
 from tkinter import Frame, Label, NORMAL, END, W, E, S, N, TOP, DISABLED
-from tkinter.ttk import Combobox, Separator
+from tkinter.ttk import Combobox, Button
 from customtkinter import CTkEntry, CTkButton, CTkSwitch
 
 import time
@@ -11,9 +12,8 @@ from base import (COLOR1, COLOR3, COMMON_FONT, DAY_ROWS, MINS_IN_ROW, CBOX_DEFAU
 
 class ComboBox(Combobox):
     """Обёртка для CTKCombobox. Обрабатывает список входных значений (values)"""
-    def __init__(self, parent, values: tuple, state: str = NORMAL):
+    def __init__(self, parent, state: str = NORMAL):
         super().__init__(master=parent, state=READONLY)
-        self.configure(values=self.process_values(values))
         self.set(CBOX_DEFAULT)
 
     def process_values(self, values: tuple) -> list:
@@ -43,10 +43,9 @@ class StopWatchSelector(Frame):
     DEED_CHANGED = 'deed_changed'  # Дело изменено
     LAUNCH = 'launch'  # Запуск программы
 
-    def __init__(self, parent, values: tuple, deed_request):
+    def __init__(self, parent, deed_request):
         super().__init__(master=parent)
         self.deed_request = deed_request
-        self.values = values
         self.data = {
             CURRENT_DEED: '',
             TIME_MAIN: '',
@@ -64,7 +63,7 @@ class StopWatchSelector(Frame):
         self.columnconfigure(1, weight=1)
 
 
-        self.wdg_selector = ComboBox(self, self.values)
+        self.wdg_selector = ComboBox(self)
         self.wdg_selector.grid(row=0, column=0, columnspan=2, sticky=W + E)
         self.wdg_selector.bind('<<ComboboxSelected>>', self.change_deed)
 
@@ -128,6 +127,7 @@ class StopWatchSelector(Frame):
             self.stop()
 
         self.wdg_selector.set(CBOX_DEFAULT)
+        self.wdg_selector.clear()
         self.sw_insert(self.wdg_main_swatch, DEFAULT_TIME)
         self.sw_insert(self.wdg_deed_swatch, DEFAULT_TIME)
         # В данном случае из Window последовательно вызываются to_default и load_deed, т.е. состояние будет изменено на состояние при запуске
@@ -308,19 +308,31 @@ class Deed(Frame):
 
 
 class Menu(Frame):
+    """Класс меню. parent - родительский виджет, window_now - окно, размещённой в момент создания экземпляра, switch_data -
+       словарь вида {<название окна>: <экземпляр класса окна>}. Каждый экзмепляр класса окна должен иметь методы collapse_window
+       и place_window (1-й отвечает за уничтожение виджета, 2-й - за размещение)."""
 
-    def __init__(self, parent, window_now, buttons: tuple):  # Параметры кнопок
+    def __init__(self, parent, window_now, switch_data: dict):  # Параметры кнопок
         super().__init__(master=parent, bg='Black')
-        self.buttons = buttons
+        self.switch_data = switch_data
         self.window_now = window_now
+        self._place_widgets()
 
-    def place_widgets(self):
-        for row, btn in self.buttons:
-            btn.configure(master=self)
-            btn.grid(row=row, column=0)
+    def _place_widgets(self):
+        for row, window_name in enumerate(self.switch_data.keys()):
+            switching_window = self.switch_data[window_name]
+            btn = Button(self, text=window_name, command=lambda window=switching_window: self._change_window(window))
+            btn.grid(row=row, column=0, sticky=W + E)
 
-    def change_window(self):
-        self.window_now.pack_forget()
+    def _change_window(self, switching_window):
+        """Переключает текущее окно на заданное в параметре switching_window. Для каждой кнопки на панели Menu он свой."""
+        if self.window_now == switching_window:  # проверка на то, является ли переключаемое окно текущим
+            return
+
+        self.window_now.collapse_window()
+        switching_window.place_window()
+        self.window_now = switching_window  # Обновление window_now
+
 
 class DialogWindow(Frame):
     def __init__(self, master, text: str, args: list, command=None):
