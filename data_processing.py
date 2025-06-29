@@ -196,7 +196,7 @@ class Saver:
 
         def check_delete(changed_names: list, last_names: list, deeds: dict):
             """Проверяет новый план на предмет удалённых или добавленных дел, добавляет или удаляет соответствующие дела
-               из FACT_TIME."""
+               из FACT_TIME. Дело, перенесённое """
             to_delete = []
             to_add = []
             for c_name, l_name in zip(changed_names, last_names):
@@ -208,8 +208,8 @@ class Saver:
             for key in list(deeds[FACT_TIME].keys()):
                 if key in to_delete:
                     deeds[FACT_TIME].pop(key)
-                if key in to_add:
-                    deeds[FACT_TIME][key] = {TIME: '0'}
+            for key in to_add:
+                deeds[FACT_TIME][key] = {TIME: '0'}
 
             return deeds
 
@@ -321,18 +321,18 @@ class Saver:
 
 class TimingDataHandler:
     """Обрабатывает данные о соответствии плану и возвращает их в GraphicWindow. Структура возвращаемого словаря:
-       {TIMING_DATA: [{дата (dd:mm:yy): процент соответствия плану (0-100)}, ...]
-        TASK_DATA: {задача: {FACT_TIME: потраченное на задачу время (HH), PLAN_TIME: запланированное время(HH)}, ...}"""
+       {<дата вида dd.mm.yy>: <процент соответствия плану>}"""
+    # ToDo: переделать доку в методах
 
-    plan_data: dict[list[dict], list[dict]]
+    plan_data: dict
     DAYS_PATH = pathlib.Path(PATH, DAYS)
 
     def __init__(self, dates: list[str]):
-        self.plan_data = {TIMING_DATA: [], TASK_DATA: []}
+        self.plan_data = {}
         for date_ in dates:
-            deeds_data = self.process_data(self.take_data(date_))
+            deeds_data = self.take_data(date_)
             if deeds_data:  # Если файл <date>.json существует
-                self.plan_data[TIMING_DATA].append(self.calculate_timing(deeds_data, date_))
+                self.plan_data[date_] = self.calculate_timing(self.process_data(deeds_data), date_)
 
     def take_data(self, date: str) -> dict | bool:
         """Возвращает данные из main_json'a за день, указанный в date"""
@@ -370,8 +370,8 @@ class TimingDataHandler:
 
         return ignoring_time
 
-    def calculate_timing(self, deeds_data: dict, date_: str) -> dict:
-        """Вычисляет соответствие плану. Возвращает словарь для TIMING_DATA вида: {дата (dd:mm:yy): процент соответствия плану (0-100)}"""
+    def calculate_timing(self, deeds_data: dict, date_: str) -> float:
+        """Вычисляет соответствие плану в процентах, округлённое до 2-х знаков."""
         time_sum = 0
         deeds = 0
         for deed_key in deeds_data[FACT_TIME]:  # в main_json дела всегда идут в одном порядке в PLAN- и FACT_TIME
@@ -385,17 +385,8 @@ class TimingDataHandler:
             if fact_deed_time >= plan_deed_time and plan_deed_time != 1:  # Если FACT_TIME >= PLAN_TIME - соответствие 100-процентное
                 time_sum += 100  # plan_deed_time != 1 нужно для случая с полным игнорированием дела, когда TIME = 0, в этом случае дело не может быть выполнено.
             else:
-
                 time_sum += 100 - (((plan_deed_time - fact_deed_time) / plan_deed_time) * 100)  # Вычисляем соответствие
 
         time_sum += time_sum // deeds  # Прибавляем среднее арифметическое всех задач (значение общего соблюдения плана)
         deeds += 1  # Количество прибавлений к time_sum увеличилось (прибавили среднее арифметическое)
-        return {date_: round(time_sum // deeds, 2)}
-
-    def calculate_task_data(self, deeds_data: list[dict], date_: str) -> dict:
-        """Вычисляет время, выделяемое на задачи в течение дня. Проверяет наличие задачи в plan_data[TASK_DATA], если есть -
-           добавляет FACT_TIME и PLAN_TIME к соответствующим ключам словаря задачи, если нет - добавляет словарь с FACT_TIME и
-           PLAN_TIME"""
-
-
-
+        return round(time_sum // deeds, 2)

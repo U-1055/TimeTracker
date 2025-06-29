@@ -14,6 +14,7 @@ DEED_COLOR2 = "#04DBFF"
 # Шрифты
 COMMON_FONT = ('Arial', 12)
 COMMON_FONT_COLOR = 'White'
+DISABLE_FONT_COLOR = '#858585'
 
 # Надписи на виджетах
 START_TEXT = 'Старт'

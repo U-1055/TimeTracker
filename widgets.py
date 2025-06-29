@@ -1,14 +1,17 @@
+import datetime
 import tkinter
-from tkinter import Frame, Label, NORMAL, END, W, E, S, N, TOP, DISABLED
+from tkinter import Frame, Label, NORMAL, END, W, E, S, N, TOP, DISABLED, StringVar, Entry
 from tkinter.ttk import Combobox, Button
-from customtkinter import CTkEntry, CTkButton, CTkSwitch
+from customtkinter import CTkEntry, CTkButton, CTkSwitch, CTkFrame
 
 import time
 from threading import Thread
+import re
 
 from base import (COLOR1, COLOR3, COMMON_FONT, DAY_ROWS, MINS_IN_ROW, CBOX_DEFAULT, START_TEXT, STOP_TEXT, COMMON_FONT_COLOR, CURRENT_DEED,
                   IGNORING_COLOR, IGNORING_TEXT_COLOR, IGNORING_TEXT, TIME_MAIN, TIME_DEED, NAME, TIME_START, TIME_END,
-                  TIME, READONLY, DEFAULT_TIME, time_to_sec, rm_insignificant_zeros)
+                  TIME, READONLY, DEFAULT_TIME, time_to_sec, rm_insignificant_zeros, DISABLE_FONT_COLOR)
+
 
 class ComboBox(Combobox):
     """Обёртка для CTKCombobox. Обрабатывает список входных значений (values)"""
@@ -38,6 +41,7 @@ class ComboBox(Combobox):
 class StopWatchSelector(Frame):
 
     #Константы события
+
     START = 'start'   # Отсчёт запущен
     STOP = 'stop'  # Отсчёт остановлен
     DEED_CHANGED = 'deed_changed'  # Дело изменено
@@ -352,5 +356,42 @@ class DialogWindow(Frame):
             self.command(self.args)
         self.destroy()
 
+
+class PeriodEntry(CTkEntry):
+    """Модифицированный tkinter.Entry с валидацией, пропускающей только цифры 0-9, точку (.) и дефис (-). Имеет текст по умолчанию."""
+    DEFAULT_TEXT = 'dd.mm.yy-dd.mm.yy'
+    ALLOWED_CHARS = ('.', '-')
+    EXPR_FOR_RANGE = ('.*')
+
+    def __init__(self, master):
+        super().__init__(master=master)
+        self.configure(validate="key", validatecommand=(self.register(self.__check_state), '%S'))
+
+    def __check_state(self, char) -> bool:
+        """Валидирует виджет и вводит в него текст по умолчанию, если в нём нет символов."""
+
+        if char.isdigit() or char in self.ALLOWED_CHARS:
+            return True
+        else:
+            return False
+
+    def get_dates(self) -> list[str] | bool:
+        """Возвращает список дат из диапазона, введённого в виджет в виде dd.mm.yy-dd.mm.yy. Если ввод некорректен,
+           возвращает False"""
+        range_ = self.get()
+        if re.match(self.EXPR_FOR_RANGE, range_):  #ToDo: сделать проверку по регулярке, добавить проверку большей / меньшей даты
+            start_date, end_date = range_.split('-')
+            start_date = datetime.datetime.strptime(start_date, "%d.%m.%y")
+            end_date = datetime.datetime.strptime(end_date, "%d.%m.%y")
+
+            dates = []
+            delta = end_date - start_date
+            for day in range(delta.days + 1):
+                date_ = start_date + datetime.timedelta(day)
+                dates.append(str(date_.strftime("%d.%m.%y")))
+
+            return dates
+        else:
+            return False
 
 

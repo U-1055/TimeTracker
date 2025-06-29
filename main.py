@@ -1,9 +1,11 @@
 import time
 from tkinter import Frame, Button, Tk, BOTH, W, E, N, S, Y
 from customtkinter import CTkButton
+from matplotlib import pyplot
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 from threading import Thread
 
-from widgets import StopWatchSelector, DeedsPanel, Menu
+from widgets import StopWatchSelector, DeedsPanel, Menu, PeriodEntry
 from data_processing import Saver, TimingDataHandler
 from base import DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME, NAME, FINISH_DAY_TEXT, COLOR1, COLOR3, COLOR2, CHANGE_PLAN_TEXT
  # ToDo: убрать assert'ы !!!
@@ -131,14 +133,59 @@ class Window(Frame):
 
 class GraphicWindow(Frame):
     """Окно с графиком"""
-    timing_data: list[dict]
+    _timing_data: list[dict]
 
     def __init__(self, parent):
         super().__init__(master=parent)
-        self.place_widgets()
+        self._timing_data = [{}]
+        self.graph_built = False
+        self._place_widgets()
 
-    def place_widgets(self):
+    def _place_widgets(self):
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=8)
+
+        self.wdg_period_selector = PeriodEntry(self)
+        self.wdg_period_selector.grid(row=0, column=0, sticky=W)
+
+        graph_build_btn = Button(self, command=self.take_data)
+        graph_build_btn.grid(row=0, column=1)
+
+        wdg_graphic = Frame(self, bg=COLOR2)
+        wdg_graphic.grid(row=1, column=0, sticky=W + E + N + S, columnspan=2)
+
+    def take_data(self):
+        """Получает данные о соответствии плану и инициирует построение графика. Вызывается при"""
+        dates = self.wdg_period_selector.get_dates()
+        if dates:
+            timing_handler = TimingDataHandler(dates)
+            self.build_graph(timing_handler.plan_data)
+
+    def build_graph(self, plan_data: dict):
+        """Строит график соответствия плану. Принимает словарь вида {<дата вида dd.mm.yy>: <процент соответствия плану>}"""
+        self.graph_built = True
+        dates = list(plan_data.keys())
+        percents = [compl for compl in plan_data]
+
+        pyplot.title(f'График соответствия плану в период dd.mm.yy-dd.mm.yy')
+        pyplot.xlabel('День')
+        pyplot.ylabel('Процент соответствия')
+        pyplot.plot(dates, percents)
+
+    def delete_graph(self):
+        self.graph_built = False
         pass
+
+    def collapse_window(self):
+        self.grid_forget()
+
+    def place_window(self):
+        self.grid(row=0, column=1, sticky=W + E + N + S)
+
+
+class Settings(Frame):
+    def __init__(self, parent):
+        super().__init__(master=parent)
 
     def collapse_window(self):
         self.grid_forget()
