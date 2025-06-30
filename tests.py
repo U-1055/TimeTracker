@@ -5,5 +5,11 @@ class MyTestCase(unittest.TestCase):
     def test_something(self):
         self.assertEqual(True, False)  # add assertion here
 
+class DataGenerator:
+    """Генератор данных. Принимает на вход словарь вида {<ключ>: <допустимые значения>}"""
+    def __init__(self, structure: dict):
+        pass
+
+
 if __name__ == '__main__':
     unittest.main()

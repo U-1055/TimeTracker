@@ -1,13 +1,15 @@
 import time
 from tkinter import Frame, Button, Tk, BOTH, W, E, N, S, Y
 from customtkinter import CTkButton
-from matplotlib import pyplot
-from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from threading import Thread
 
 from widgets import StopWatchSelector, DeedsPanel, Menu, PeriodEntry
 from data_processing import Saver, TimingDataHandler
-from base import DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME, NAME, FINISH_DAY_TEXT, COLOR1, COLOR3, COLOR2, CHANGE_PLAN_TEXT
+from base import (DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME, NAME, FINISH_DAY_TEXT, COLOR1, COLOR3, COLOR2,
+                  CHANGE_PLAN_TEXT, PERMISSIBLE_PERCENT)
  # ToDo: убрать assert'ы !!!
 
 
@@ -144,37 +146,51 @@ class GraphicWindow(Frame):
     def _place_widgets(self):
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=8)
+        self.columnconfigure(0, weight=6)
 
         self.wdg_period_selector = PeriodEntry(self)
         self.wdg_period_selector.grid(row=0, column=0, sticky=W)
 
-        graph_build_btn = Button(self, command=self.take_data)
+        graph_build_btn = Button(self, command=self._take_data)
         graph_build_btn.grid(row=0, column=1)
 
-        wdg_graphic = Frame(self, bg=COLOR2)
-        wdg_graphic.grid(row=1, column=0, sticky=W + E + N + S, columnspan=2)
+        self.graph_frm = Frame(self, bg=COLOR1)
+        self.graph_frm.grid(row=1, column=0, sticky=W + E + N + S, columnspan=2)
 
-    def take_data(self):
+    def _take_data(self):
         """Получает данные о соответствии плану и инициирует построение графика. Вызывается при"""
         dates = self.wdg_period_selector.get_dates()
+        test_dict = {'23.06.25': '82', '24.06.25': '91', '25.06.25': '87', '26.06.25': '90', '27.06.25': '95', '28.06.25': '97',
+                 '29.06.25': '43', '30.06.25': '32'}
         if dates:
             timing_handler = TimingDataHandler(dates)
-            self.build_graph(timing_handler.plan_data)
+            if self.graph_built:
+                self._delete_graph()
+            self._build_graph(test_dict)
 
-    def build_graph(self, plan_data: dict):
-        """Строит график соответствия плану. Принимает словарь вида {<дата вида dd.mm.yy>: <процент соответствия плану>}"""
+    def _build_graph(self, plan_data: dict):
+        """Строит график соответствия плану. Принимает словарь вида {<дата вида dd.mm.yy>: <процент соответствия плану>}."""
         self.graph_built = True
         dates = list(plan_data.keys())
-        percents = [compl for compl in plan_data]
+        percents = [(int(accordance)) for accordance in plan_data.values()]
 
-        pyplot.title(f'График соответствия плану в период dd.mm.yy-dd.mm.yy')
-        pyplot.xlabel('День')
-        pyplot.ylabel('Процент соответствия')
-        pyplot.plot(dates, percents)
+        figure = Figure(figsize=(5, 5))
+        plot = figure.add_subplot(111)
+        plot.grid()
+        plot.axline(xy1=(0, PERMISSIBLE_PERCENT), slope=0, color='r')
+        plot.set_ylim(bottom=0, top=100)
+        plot.set_yticks((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100))
+        plot.plot(dates, percents, marker='o', linestyle='dashed')
 
-    def delete_graph(self):
+        graph_view = FigureCanvasTkAgg(figure, self.graph_frm)
+        graph_view.draw()
+        graph_view.get_tk_widget().pack(fill=BOTH, expand=True)
+
+    def _delete_graph(self):
+        """Удаляет виджет графика (и все дочерние виджеты graph_frm)."""
         self.graph_built = False
-        pass
+        for widget in self.graph_frm.winfo_children():
+            widget.destroy()
 
     def collapse_window(self):
         self.grid_forget()

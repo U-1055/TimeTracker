@@ -51,9 +51,10 @@ IGNORING_TIME = "ignoring_time"
 
 # Прочее
 MINS_IN_ROW = 15  # количество минут в одной строчке на панели дня DeedsPanel
-DAY_ROWS = 97 #количество строчек на панели дня в DeedsPanel. 1 строчка - 15 мин.
-SAVE_CYCLE_TIME = 60 # время между сохранениями в временный JSON (секунды)
-READONLY = 'readonly' # константа состояния виджета tkinter
+DAY_ROWS = 97  # количество строчек на панели дня в DeedsPanel. 1 строчка - 15 мин.
+SAVE_CYCLE_TIME = 60  # время между сохранениями в временный JSON (секунды)
+READONLY = 'readonly'  # константа состояния виджета tkinter
+PERMISSIBLE_PERCENT = 80  # минимально допустимый процент выполнения плана
 
 def calculate_time(time1: str, time2: str) -> int:
     """Вычисляет разницу (в секундах) между двумя временными метками в формате hh:mm. time1 < time2.

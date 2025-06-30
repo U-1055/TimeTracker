@@ -369,7 +369,6 @@ class PeriodEntry(CTkEntry):
 
     def __check_state(self, char) -> bool:
         """Валидирует виджет и вводит в него текст по умолчанию, если в нём нет символов."""
-
         if char.isdigit() or char in self.ALLOWED_CHARS:
             return True
         else:
@@ -383,6 +382,9 @@ class PeriodEntry(CTkEntry):
             start_date, end_date = range_.split('-')
             start_date = datetime.datetime.strptime(start_date, "%d.%m.%y")
             end_date = datetime.datetime.strptime(end_date, "%d.%m.%y")
+
+            start_date = min(start_date, end_date)
+            end_date = max(start_date, end_date)
 
             dates = []
             delta = end_date - start_date
