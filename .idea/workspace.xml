@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Определена логика GraphicWindow, начат PeriodEntry, начата работа с matplotlib.">
+    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Сделано GraphicWindow.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/widgets.py" beforeDir="false" afterPath="$PROJECT_DIR$/widgets.py" afterDir="false" />
@@ -232,7 +233,15 @@
       <option name="project" value="LOCAL" />
       <updated>1751204642903</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="Сделано GraphicWindow.">
+      <option name="closed" value="true" />
+      <created>1751259048443</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1751259048443</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -265,50 +274,16 @@
     <MESSAGE value="Переделки в GUI" />
     <MESSAGE value="Сделано переключение между окнами через Menu. Небольшие доделки: сделано изменение списка Combobox через метод" />
     <MESSAGE value="Определена логика GraphicWindow, начат PeriodEntry, начата работа с matplotlib." />
-    <option name="LAST_COMMIT_MESSAGE" value="Определена логика GraphicWindow, начат PeriodEntry, начата работа с matplotlib." />
+    <MESSAGE value="Сделано GraphicWindow." />
+    <option name="LAST_COMMIT_MESSAGE" value="Сделано GraphicWindow." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>203</line>
-          <option name="timeStamp" value="46" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>205</line>
-          <option name="timeStamp" value="47" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data_processing.py</url>
           <line>293</line>
           <option name="timeStamp" value="52" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>227</line>
-          <option name="timeStamp" value="57" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>218</line>
-          <option name="timeStamp" value="58" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>225</line>
-          <option name="timeStamp" value="59" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>209</line>
-          <option name="timeStamp" value="61" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/data_processing.py</url>
-          <line>211</line>
-          <option name="timeStamp" value="62" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

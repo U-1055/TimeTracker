@@ -61,11 +61,8 @@ class StopWatchSelector(Frame):
 
     def place_widgets(self):
 
-        start_btn_state = NORMAL
-
         self.columnconfigure(0, weight=2)
         self.columnconfigure(1, weight=1)
-
 
         self.wdg_selector = ComboBox(self)
         self.wdg_selector.grid(row=0, column=0, columnspan=2, sticky=W + E)
@@ -79,7 +76,7 @@ class StopWatchSelector(Frame):
         self.wdg_deed_swatch.grid(row=1, column=1, sticky=W + E)
         self.sw_insert(self.wdg_deed_swatch, DEFAULT_TIME)
 
-        self.start_btn = CTkButton(self, text=START_TEXT, state=start_btn_state, command=self.start)
+        self.start_btn = CTkButton(self, text=START_TEXT, command=self.start)
         self.start_btn.grid(row=2, column=0)
 
         self.stop_btn = CTkButton(self, text=STOP_TEXT, state=DISABLED, command=self.stop)
@@ -186,6 +183,7 @@ class StopWatchSelector(Frame):
             self.thread_2.join()
         else:
             self.thread_1.join()
+
 
 class DeedsPanel(Frame):
     """Панель с делами. Параметр change_saver - static-метод класса Saver, передаваемый в экземпляры класса Deed"""
@@ -317,7 +315,7 @@ class Menu(Frame):
        и place_window (1-й отвечает за уничтожение виджета, 2-й - за размещение)."""
 
     def __init__(self, parent, window_now, switch_data: dict):  # Параметры кнопок
-        super().__init__(master=parent, bg='Black')
+        super().__init__(master=parent, bg=COLOR3)
         self.switch_data = switch_data
         self.window_now = window_now
         self._place_widgets()
@@ -361,7 +359,8 @@ class PeriodEntry(CTkEntry):
     """Модифицированный tkinter.Entry с валидацией, пропускающей только цифры 0-9, точку (.) и дефис (-). Имеет текст по умолчанию."""
     DEFAULT_TEXT = 'dd.mm.yy-dd.mm.yy'
     ALLOWED_CHARS = ('.', '-')
-    EXPR_FOR_RANGE = ('.*')
+    EXPR_FOR_RANGE = '^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.([0-9]{2})-(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.([0-9]{2})$'
+    #  регулярное выражение для проверки даты в формате dd.mm.yy-dd.mm.yy
 
     def __init__(self, master):
         super().__init__(master=master)

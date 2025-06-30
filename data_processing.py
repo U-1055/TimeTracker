@@ -9,7 +9,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from base import (time_to_sec, calculate_time, time_to_format, CURRENT_DEED, TIME, TIME_MAIN, TIME_DEED, PLAN_TIME,
                   FACT_TIME, NAME, CBOX_DEFAULT, TIME_START, TIME_END, HTTP_ERROR, SERVER_NOT_FOUND_ERROR, IGNORING_TIME,
-                  TASK_DATA, TIMING_DATA, DEFAULT_TIME)
+                  TASK_DATA, TIMING_DATA, DEFAULT_TIME, DATE_FORMAT)
 
 """
 Структура json'ов: 
@@ -28,7 +28,7 @@ PATH = 'data'
 DAYS = 'days'
 
 temp_json = 'temp.json'
-main_json = f'{datetime.date.today().strftime('%d.%m.%y')}.json'
+main_json = f'{datetime.date.today().strftime(DATE_FORMAT)}.json'
 temp_json_path = pathlib.Path(PATH, temp_json)
 main_json_path = pathlib.Path(PATH, DAYS, main_json)
 
@@ -159,7 +159,7 @@ class Saver:
         """Обрабатывает day_data в пригодный для ввода в main_json формат. Удаляет повторяющиеся дела и суммирует их
            длительность, удаляет дела, начатые ранее 00:00 текущего дня.
            Пример: [{"name": deed1, "time_start": 23:00, "time_end": 03:00}, {"name": deed2, ""}]"""
-        # ToDo: желательно отрефакторить, порождает проблемы (убрать вложенную функцию)
+
         def rm_last_day():
             """Удаляет дела, начатые ранее 00:00 текущего дня"""
 
@@ -370,7 +370,7 @@ class TimingDataHandler:
 
         return ignoring_time
 
-    def calculate_timing(self, deeds_data: dict, date_: str) -> float:
+    def calculate_timing(self, deeds_data: dict) -> float:
         """Вычисляет соответствие плану в процентах, округлённое до 2-х знаков."""
         time_sum = 0
         deeds = 0
@@ -387,6 +387,4 @@ class TimingDataHandler:
             else:
                 time_sum += 100 - (((plan_deed_time - fact_deed_time) / plan_deed_time) * 100)  # Вычисляем соответствие
 
-        time_sum += time_sum // deeds  # Прибавляем среднее арифметическое всех задач (значение общего соблюдения плана)
-        deeds += 1  # Количество прибавлений к time_sum увеличилось (прибавили среднее арифметическое)
         return round(time_sum // deeds, 2)

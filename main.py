@@ -32,7 +32,6 @@ class Window(Frame):
         if self.saver.in_process():  # temp_json существует? (T.е. день идёт?)
             if not self.saver.compare_plans():
                 self.change_plan()
-                print('changing...')
 
     def place_widgets(self):
         self.columnconfigure(0, weight=4)
@@ -120,10 +119,9 @@ class Window(Frame):
             self.save()
 
     def collapse_window(self):
-        """Вызывается при уничтожении виджета через Menu. Останавливает отсчёт в StopWatchSelector, останавливает
-           цикл сохранения и сохраняет данные, после чего уничтожает виджет."""
+        """Вызывается при уничтожении виджета через Menu. Останавливает цикл сохранения и сохраняет данные,
+           после чего уничтожает виджет."""
         self.saving = False
-        self.wdg_stop_watch.stop()
         self.save()
         self.grid_forget()
 
@@ -160,13 +158,11 @@ class GraphicWindow(Frame):
     def _take_data(self):
         """Получает данные о соответствии плану и инициирует построение графика. Вызывается при"""
         dates = self.wdg_period_selector.get_dates()
-        test_dict = {'23.06.25': '82', '24.06.25': '91', '25.06.25': '87', '26.06.25': '90', '27.06.25': '95', '28.06.25': '97',
-                 '29.06.25': '43', '30.06.25': '32'}
         if dates:
             timing_handler = TimingDataHandler(dates)
             if self.graph_built:
                 self._delete_graph()
-            self._build_graph(test_dict)
+            self._build_graph(timing_handler.plan_data)
 
     def _build_graph(self, plan_data: dict):
         """Строит график соответствия плану. Принимает словарь вида {<дата вида dd.mm.yy>: <процент соответствия плану>}."""

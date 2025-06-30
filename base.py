@@ -55,6 +55,7 @@ DAY_ROWS = 97  # количество строчек на панели дня в
 SAVE_CYCLE_TIME = 60  # время между сохранениями в временный JSON (секунды)
 READONLY = 'readonly'  # константа состояния виджета tkinter
 PERMISSIBLE_PERCENT = 80  # минимально допустимый процент выполнения плана
+DATE_FORMAT = "%d.%m.%y"  # формат дат, используемых в программе (для datetime.strftime/strptime)
 
 def calculate_time(time1: str, time2: str) -> int:
     """Вычисляет разницу (в секундах) между двумя временными метками в формате hh:mm. time1 < time2.
