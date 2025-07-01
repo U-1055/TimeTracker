@@ -288,7 +288,7 @@ class Saver:
         with open(main_json_path, 'rb') as main_:
             saved_plan = json.load(main_)
 
-        saved_data = {}  # ToDo: переписать
+        saved_data = {}
         for deed_key in saved_plan[PLAN_TIME].keys():
             saved_data[deed_key] = {TIME: saved_plan[PLAN_TIME][deed_key][TIME]}
         return api_data == saved_data
@@ -322,7 +322,6 @@ class Saver:
 class TimingDataHandler:
     """Обрабатывает данные о соответствии плану и возвращает их в GraphicWindow. Структура возвращаемого словаря:
        {<дата вида dd.mm.yy>: <процент соответствия плану>}"""
-    # ToDo: переделать доку в методах
 
     plan_data: dict
     DAYS_PATH = pathlib.Path(PATH, DAYS)
@@ -332,7 +331,7 @@ class TimingDataHandler:
         for date_ in dates:
             deeds_data = self.take_data(date_)
             if deeds_data:  # Если файл <date>.json существует
-                self.plan_data[date_] = self.calculate_timing(self.process_data(deeds_data), date_)
+                self.plan_data[date_] = self.calculate_timing(self.process_data(deeds_data))
 
     def take_data(self, date: str) -> dict | bool:
         """Возвращает данные из main_json'a за день, указанный в date"""

@@ -1,5 +1,5 @@
 import datetime
-import tkinter
+from queue import Queue
 from tkinter import Frame, Label, NORMAL, END, W, E, S, N, TOP, DISABLED, StringVar, Entry
 from tkinter.ttk import Combobox, Button
 from customtkinter import CTkEntry, CTkButton, CTkSwitch, CTkFrame
@@ -46,6 +46,10 @@ class StopWatchSelector(Frame):
     STOP = 'stop'  # Отсчёт остановлен
     DEED_CHANGED = 'deed_changed'  # Дело изменено
     LAUNCH = 'launch'  # Запуск программы
+
+    # Индексы значений времени секундомеров в очереди
+    MAIN_TIME_IDX = 0
+    DEED_TIME_IDX = 1
 
     def __init__(self, parent, deed_request):
         super().__init__(master=parent)
@@ -134,7 +138,8 @@ class StopWatchSelector(Frame):
         # В данном случае из Window последовательно вызываются to_default и load_deed, т.е. состояние будет изменено на состояние при запуске
 
     def change_wdg_state(self, event: str):
-        """Меняет состояние wdg_selector, start_btn и stop_btn в зависимости от события"""
+        """Меняет состояние wdg_selector, start_btn и stop_btn в зависимости от события. Меняет main_time и deed_time"""
+
         if event == self.START:
             self.wdg_selector.configure(state=DISABLED)
             self.start_btn.configure(state=DISABLED)
@@ -377,7 +382,7 @@ class PeriodEntry(CTkEntry):
         """Возвращает список дат из диапазона, введённого в виджет в виде dd.mm.yy-dd.mm.yy. Если ввод некорректен,
            возвращает False"""
         range_ = self.get()
-        if re.match(self.EXPR_FOR_RANGE, range_):  #ToDo: сделать проверку по регулярке, добавить проверку большей / меньшей даты
+        if re.match(self.EXPR_FOR_RANGE, range_):
             start_date, end_date = range_.split('-')
             start_date = datetime.datetime.strptime(start_date, "%d.%m.%y")
             end_date = datetime.datetime.strptime(end_date, "%d.%m.%y")
@@ -390,7 +395,6 @@ class PeriodEntry(CTkEntry):
             for day in range(delta.days + 1):
                 date_ = start_date + datetime.timedelta(day)
                 dates.append(str(date_.strftime("%d.%m.%y")))
-
             return dates
         else:
             return False

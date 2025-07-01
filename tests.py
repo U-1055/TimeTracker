@@ -1,9 +1,20 @@
-import unittest
+from data_processing import Saver
+from pathlib import Path
+import json
+import random
 
+TEST_DIR_PATH = Path('test_cases')
 
-class MyTestCase(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)  # add assertion here
+class TestSaver:
+
+    def __init__(self):
+        pass
+
+    def test_process_to_fact(self):
+        pass
+
+    def test_process_to_plan(self):
+        pass
 
 
 class DataGenerator:
@@ -12,6 +23,6 @@ class DataGenerator:
         pass
 
 
-
 if __name__ == '__main__':
-    unittest.main()
+    pass
+

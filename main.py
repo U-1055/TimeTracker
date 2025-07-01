@@ -20,7 +20,7 @@ class Window(Frame):
         self.saver = Saver()
         self.day_data = self.saver.day_data  # Получение информации о плане
 
-        self.saving = True
+        self.saving = False
         self.place_widgets()  # Размещение виджетов
 
         self.wdg_stop_watch.load_deed(self.saver.get_temp_json())  # Загрузка данных в StopWatchSelector
@@ -114,7 +114,6 @@ class Window(Frame):
     def saving_cycle(self):
         """Цикл сохранения. Раз в SAVE_CYCLE_TIME сек. сохраняет данные из StopWatchSelector."""
         while self.saving:
-            print("Saving...")
             time.sleep(SAVE_CYCLE_TIME)
             self.save()
 
@@ -207,6 +206,7 @@ class Settings(Frame):
 
 
 def launch():
+
     root = Tk()
     root.title('TimeTracker')
     root.geometry(f'{root.winfo_screenwidth() // 100 * 60}x{root.winfo_screenheight() // 100 * 60}'
