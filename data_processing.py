@@ -288,7 +288,7 @@ class Saver:
         with open(main_json_path, 'rb') as main_:
             saved_plan = json.load(main_)
 
-        saved_data = {}
+        saved_data = {}  # ToDo: переписать
         for deed_key in saved_plan[PLAN_TIME].keys():
             saved_data[deed_key] = {TIME: saved_plan[PLAN_TIME][deed_key][TIME]}
         return api_data == saved_data
