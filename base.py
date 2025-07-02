@@ -1,17 +1,20 @@
 """Содержит функции и константы"""
+from PIL import ImageTk, Image
+from pathlib import Path
 
 # Цвета
-COLOR1 = 'White'
-COLOR2 = 'Gray'
-COLOR3 = '#DEDEDE'
+COLOR1 = '#C2EDD4'
+COLOR2 = '#A8EDA5'
+COLOR3 = '#B8ED63'
 BLACK = 'Black'
 RED = "#FF290D"
 IGNORING_COLOR = "#DBDBDB"
 IGNORING_TEXT_COLOR = "#2B2B2B"
-DEED_COLOR1 = "#FF290D"
-DEED_COLOR2 = "#04DBFF"
+DEED_COLOR1 = "#377D22"
+DEED_COLOR2 = "#FF7646"
 
 # Шрифты
+HEADER_FONT = ('Arial', 12, 'bold')
 COMMON_FONT = ('Arial', 12)
 COMMON_FONT_COLOR = 'White'
 DISABLE_FONT_COLOR = '#858585'
@@ -24,6 +27,9 @@ FINISH_DAY_TEXT = 'Завершить день'
 CHANGE_PLAN_TEXT = 'Обновить план'
 IGNORING_TEXT = 'Игнорировать'
 DEFAULT_TIME = '00:00:00'  # Начальный ввод в секундомер
+LAST_BREAK_TEXT = 'Время последнего перерыва: '
+LBL_PERIOD_SELECT_TEXT = 'Введите период для построения графика (dd.mm.yy-dd.mm.yy)'
+SAVE_TEXT = 'Сохранить'
 
 # Сообщения об ошибках
 HTTP_ERROR = 'Ошибка при извлечении данных из Google Calendar'
@@ -56,6 +62,7 @@ SAVE_CYCLE_TIME = 60  # время между сохранениями в вре
 READONLY = 'readonly'  # константа состояния виджета tkinter
 PERMISSIBLE_PERCENT = 80  # минимально допустимый процент выполнения плана
 DATE_FORMAT = "%d.%m.%y"  # формат дат, используемых в программе (для datetime.strftime/strptime)
+TIME_VIEW_FORMAT = "%H:%M:%S"  # отображаемый формат времени (на 02.07 используется в StopWatchSelector.lbl_last_break)
 
 def calculate_time(time1: str, time2: str) -> int:
     """Вычисляет разницу (в секундах) между двумя временными метками в формате hh:mm. time1 < time2.
@@ -106,3 +113,4 @@ def rm_insignificant_zeros(time_: str) -> int:
         return int(time_[1])
     else:
         return int(time_)
+

@@ -9,7 +9,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from base import (time_to_sec, calculate_time, time_to_format, CURRENT_DEED, TIME, TIME_MAIN, TIME_DEED, PLAN_TIME,
                   FACT_TIME, NAME, CBOX_DEFAULT, TIME_START, TIME_END, HTTP_ERROR, SERVER_NOT_FOUND_ERROR, IGNORING_TIME,
-                  TASK_DATA, TIMING_DATA, DEFAULT_TIME, DATE_FORMAT)
+                  DEFAULT_TIME, DATE_FORMAT)
 
 """
 Структура json'ов: 
@@ -83,9 +83,12 @@ class APIProcessor:
 
         plan_struct = []
         for num, deed in enumerate(data_[self.ITEMS]):
-
-            plan_struct.append(   # ToDo:  продумать проверку на отсутствие 'summary' (возможно если у дела нет заголовка (в календаре отображается как: (Нет заголовка)))
-                {NAME: deed[self.SUMMARY].strip(),  # Удаляет пробелы
+            if self.SUMMARY not in deed.keys():  # проверка на наличие названия у мероприятия
+                name = 'Нет заголовка'
+            else:
+                name = deed[self.SUMMARY]
+            plan_struct.append(
+                {NAME: name.strip(),  # Удаляет пробелы
                  TIME_START: date_to_time(deed[self.START][self.DATE_TIME]),
                  TIME_END: date_to_time(deed[self.END][self.DATE_TIME])})
 
@@ -113,26 +116,20 @@ class Saver:
         self.create_jsons()
 
     def create_jsons(self):
-
-        if not temp_json_path.is_file():
+        """Создаёт temp_json и/или main_json (при отсутствии одного или обоих из них)."""
+        if not temp_json_path.is_file():  # Проверка на существование файла
             temp_json_struct = {
                 CURRENT_DEED: CBOX_DEFAULT, TIME_MAIN: DEFAULT_TIME, TIME_DEED: DEFAULT_TIME
             }
             with open(temp_json_path, 'w') as temp:
                 json.dump(temp_json_struct, temp)
 
-        processed_data = self.process_day_data(self.day_data)
-
-        if not main_json_path.is_file():
+        if not main_json_path.is_file():  # Проверка на существование файла
+            processed_data = self.process_day_data(self.day_data)
             main_json_struct = {
-                FACT_TIME: {},  # NAME: {TIME: 'время в секундах'}
-                PLAN_TIME: {}
+                FACT_TIME: self.process_to_fact(processed_data),
+                PLAN_TIME: self.process_to_plan(processed_data)
             }
-            for deed in processed_data:
-                main_json_struct[FACT_TIME][deed[NAME]] = {TIME: '0'}
-
-            for deed in processed_data:
-                main_json_struct[PLAN_TIME][deed[NAME]] = {TIME: deed[TIME], IGNORING_TIME: []}
 
             with open(main_json_path, 'w') as main_:
                 json.dump(main_json_struct, main_)
@@ -155,7 +152,8 @@ class Saver:
         with open(temp_json_path, 'w') as temp:
             json.dump({CURRENT_DEED: deed_name, TIME_MAIN: data[TIME_MAIN], TIME_DEED: data[TIME_DEED]}, temp)
 
-    def process_day_data(self, day_data: list[dict]) -> list[dict]:
+    @staticmethod
+    def process_day_data(day_data: list[dict]) -> list[dict]:
         """Обрабатывает day_data в пригодный для ввода в main_json формат. Удаляет повторяющиеся дела и суммирует их
            длительность, удаляет дела, начатые ранее 00:00 текущего дня.
            Пример: [{"name": deed1, "time_start": 23:00, "time_end": 03:00}, {"name": deed2, ""}]"""
@@ -168,10 +166,14 @@ class Saver:
             if time_to_sec(deed[TIME_START]) > time_to_sec(next_deed[TIME_START]):
                 indexes.append(0)
 
+        def rm_deeds(indexes_: list, deeds_: list):
+            """Временная функция для создания тестовых данных из data_gen_tst.py"""
+            return [deed for idx, deed in enumerate(deeds_) if not idx in indexes_]
+
         names = []
         indexes = []
         rm_last_day()
-        day_data = self.rm_deeds(indexes, day_data)
+        day_data = rm_deeds(indexes, day_data)
         indexes = []  # Очистить индексы, чтобы не удалить лишнее при втором вызове rm_deeds
         deeds = [{NAME: deed[NAME], TIME: calculate_time(deed[TIME_START], deed[TIME_END])} for deed in day_data]
 
@@ -185,22 +187,17 @@ class Saver:
                         break
             names.append(deed[NAME])
 
-        return self.rm_deeds(indexes, deeds)  # Исключение дела, если его индекс в списке повторяющихся
-
-    def rm_deeds(self, indexes: list, deeds: list):
-        """Возвращает список без элементов под указанными индексами"""
-        return [deed for idx, deed in enumerate(deeds) if not idx in indexes]
+        return rm_deeds(indexes, deeds)  # Исключение дела, если его индекс в списке повторяющихся
 
     def change_plan(self):
         """Записывает в PLAN_TIME изменённый план. Внимание: все IGNORING_TIME при этом удаляются"""
-
         def check_delete(changed_names: list, last_names: list, deeds: dict):
             """Проверяет новый план на предмет удалённых или добавленных дел, добавляет или удаляет соответствующие дела
                из FACT_TIME. Дело, перенесённое """
             to_delete = []
             to_add = []
             for c_name, l_name in zip(changed_names, last_names):
-                if c_name not in last_names:  #  дело добавлено
+                if c_name not in last_names:  # дело добавлено
                     to_add.append(c_name)
                 if l_name not in changed_names:  # дело удалено
                     to_delete.append(l_name)
@@ -220,8 +217,7 @@ class Saver:
 
         deeds_data[PLAN_TIME] = {}
         processed_data = self.process_day_data(changed_data)
-        for deed in processed_data:
-            deeds_data[PLAN_TIME][deed[NAME]] = {TIME: deed[TIME], IGNORING_TIME: []}
+        deeds_data[PLAN_TIME] = self.process_to_plan(processed_data)
 
         deeds_data = check_delete([deed[NAME] for deed in changed_data], deeds_data[FACT_TIME].keys(), deeds_data)  #  проверка на добавленные/удалённые дела
 
@@ -288,22 +284,32 @@ class Saver:
         with open(main_json_path, 'rb') as main_:
             saved_plan = json.load(main_)
 
-        saved_data = {}  # ToDo: переписать
+        saved_data = {}
         for deed_key in saved_plan[PLAN_TIME].keys():
             saved_data[deed_key] = {TIME: saved_plan[PLAN_TIME][deed_key][TIME]}
         return api_data == saved_data
 
-    def process_to_plan(self, data_: list[dict]) -> dict:
-        """Обрабатывает данные от process_day_data в словарь для ключа PLAN_TIME main_json. Пример:
-           [{NAME: deed#1, TIME: 9000}] -> {deed#1: {TIME: 9000, IGNORING_TIME: []}}"""
+    @staticmethod
+    def process_to_plan(data_: list[dict]) -> dict:
+        """
+        Обрабатывает данные от process_day_data в словарь для ключа PLAN_TIME main_json.
+        Пример:
+        [{NAME: deed#1, TIME: 9000}] -> {deed#1: {TIME: 9000, IGNORING_TIME: []}}
+        :param data_: результат process_day_data
+        """
         deeds_data = {}
         for deed in data_:
             deeds_data[deed[NAME]] = {TIME: deed[TIME], IGNORING_TIME: []}
         return deeds_data
 
-    def process_to_fact(self, data_: list[dict]) -> dict:
-        """Обрабатывает данные от process_day_data в словарь для ключа FACT_TIME main_json. Пример:
-           [{NAME: deed#1, TIME: 9000}] -> {deed#1: {TIME: '0'}}"""
+    @staticmethod
+    def process_to_fact(data_: list[dict]) -> dict:
+        """
+        Обрабатывает данные от process_day_data в словарь для ключа FACT_TIME main_json.
+        Пример:
+        [{NAME: deed#1, TIME: 9000}] -> {deed#1: {TIME: '0'}}
+        :param data_: результат process_day_data
+        """
         deeds_data = {}
         for deed in data_:
             deeds_data[deed[NAME]] = {TIME: '0'}

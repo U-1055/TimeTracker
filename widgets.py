@@ -2,7 +2,7 @@ import datetime
 from queue import Queue
 from tkinter import Frame, Label, NORMAL, END, W, E, S, N, TOP, DISABLED, StringVar, Entry
 from tkinter.ttk import Combobox, Button
-from customtkinter import CTkEntry, CTkButton, CTkSwitch, CTkFrame
+from customtkinter import CTkEntry, CTkButton, CTkSwitch, CTkFrame, CTkProgressBar
 
 import time
 from threading import Thread
@@ -10,13 +10,14 @@ import re
 
 from base import (COLOR1, COLOR3, COMMON_FONT, DAY_ROWS, MINS_IN_ROW, CBOX_DEFAULT, START_TEXT, STOP_TEXT, COMMON_FONT_COLOR, CURRENT_DEED,
                   IGNORING_COLOR, IGNORING_TEXT_COLOR, IGNORING_TEXT, TIME_MAIN, TIME_DEED, NAME, TIME_START, TIME_END,
-                  TIME, READONLY, DEFAULT_TIME, time_to_sec, rm_insignificant_zeros, DISABLE_FONT_COLOR)
+                  TIME, READONLY, DEFAULT_TIME, time_to_sec, rm_insignificant_zeros, LAST_BREAK_TEXT, TIME_VIEW_FORMAT,
+                  DATE_FORMAT, HEADER_FONT, COLOR2)
 
 
 class ComboBox(Combobox):
     """Обёртка для CTKCombobox. Обрабатывает список входных значений (values)"""
     def __init__(self, parent, state: str = NORMAL):
-        super().__init__(master=parent, state=READONLY)
+        super().__init__(master=parent, state=READONLY, font=HEADER_FONT)
         self.set(CBOX_DEFAULT)
 
     def process_values(self, values: tuple) -> list:
@@ -72,19 +73,22 @@ class StopWatchSelector(Frame):
         self.wdg_selector.grid(row=0, column=0, columnspan=2, sticky=W + E)
         self.wdg_selector.bind('<<ComboboxSelected>>', self.change_deed)
 
-        self.wdg_main_swatch = CTkEntry(self)
+        self.wdg_main_swatch = CTkEntry(self, font=COMMON_FONT)
         self.wdg_main_swatch.grid(row=1, column=0, sticky=W + E)
         self.sw_insert(self.wdg_main_swatch, DEFAULT_TIME)
 
-        self.wdg_deed_swatch = CTkEntry(self)
+        self.wdg_deed_swatch = CTkEntry(self, font=COMMON_FONT)
         self.wdg_deed_swatch.grid(row=1, column=1, sticky=W + E)
         self.sw_insert(self.wdg_deed_swatch, DEFAULT_TIME)
 
         self.start_btn = CTkButton(self, text=START_TEXT, command=self.start)
-        self.start_btn.grid(row=2, column=0)
+        self.start_btn.grid(row=2, column=0, sticky=W)
 
         self.stop_btn = CTkButton(self, text=STOP_TEXT, state=DISABLED, command=self.stop)
-        self.stop_btn.grid(row=2, column=1)
+        self.stop_btn.grid(row=2, column=1, sticky=W)
+
+        self.lbl_last_break = Label(self, text=LAST_BREAK_TEXT)
+        self.lbl_last_break.grid(row=3, column=0, columnspan=2, sticky=W)
 
     def start(self):
 
@@ -102,6 +106,7 @@ class StopWatchSelector(Frame):
 
     def stop(self):
         self.change_wdg_state(self.STOP)
+        self.lbl_last_break.configure(text=f'{LAST_BREAK_TEXT}{datetime.datetime.now().strftime(TIME_VIEW_FORMAT)}')
 
         if self.counting:
             self.counting = False
@@ -224,7 +229,7 @@ class DeedsPanel(Frame):
             mark = Frame(self, bg=bg)
             mark.grid(row=i, column=1, sticky=W + E)
 
-    def add_deed(self, deeds: tuple[str, str, str], deed_color: str):
+    def add_deed(self, deeds: dict, deed_color: str):
         """Добавляет мероприятие на панель. deeds в виде {"name": название дела, "time_start": время начала, "time_end": время окончания}
            Время в формате: hh:mm. Предполагается, что время в минутах кратно 15-ти, т.е.:00:00, 00:15, 00:30, 00:45 и т.д."""
 
@@ -282,7 +287,7 @@ class Deed(Frame):
         self.change_wdg_state(state)
 
     def place_widgets(self):
-        self.name_lbl = Label(self, text=self.deed_name, bg=self.color, fg=self.text_color, font=COMMON_FONT)
+        self.name_lbl = Label(self, text=self.deed_name, bg=self.color, fg=self.text_color, font=HEADER_FONT)
         self.name_lbl.grid(row=0, column=0, columnspan=2)
 
         self.time_lbl = Label(self, text=f'{self.time_start}-{self.time_end}', bg=self.color, fg=self.text_color, font=COMMON_FONT)
@@ -319,8 +324,8 @@ class Menu(Frame):
        словарь вида {<название окна>: <экземпляр класса окна>}. Каждый экзмепляр класса окна должен иметь методы collapse_window
        и place_window (1-й отвечает за уничтожение виджета, 2-й - за размещение)."""
 
-    def __init__(self, parent, window_now, switch_data: dict):  # Параметры кнопок
-        super().__init__(master=parent, bg=COLOR3)
+    def __init__(self, parent, window_now, switch_data: dict, bg):  # Параметры кнопок
+        super().__init__(master=parent, bg=bg)
         self.switch_data = switch_data
         self.window_now = window_now
         self._place_widgets()
@@ -384,8 +389,8 @@ class PeriodEntry(CTkEntry):
         range_ = self.get()
         if re.match(self.EXPR_FOR_RANGE, range_):
             start_date, end_date = range_.split('-')
-            start_date = datetime.datetime.strptime(start_date, "%d.%m.%y")
-            end_date = datetime.datetime.strptime(end_date, "%d.%m.%y")
+            start_date = datetime.datetime.strptime(start_date, DATE_FORMAT)
+            end_date = datetime.datetime.strptime(end_date, DATE_FORMAT)
 
             start_date = min(start_date, end_date)
             end_date = max(start_date, end_date)
