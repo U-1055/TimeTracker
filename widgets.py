@@ -95,12 +95,9 @@ class StopWatchSelector(Frame):
         if self.wdg_selector.get() == CBOX_DEFAULT:  # На случай включённой кнопки при CBOX_DEFAULT в селекторе
             return
 
-        self.thread_1 = Thread(target=self.count_time, args=[self.wdg_main_swatch, 1], daemon=True)
-        self.thread_1.start()
-        self.thread_2 = Thread(target=self.count_time, args=[self.wdg_deed_swatch, 2], daemon=True)
-        self.thread_2.start()
-
         self.counting = True  # флаг для цикла отсчёта
+        self.count_time(self.wdg_main_swatch)
+        self.count_time(self.wdg_deed_swatch)
 
         self.change_wdg_state(self.START)
 
@@ -108,8 +105,7 @@ class StopWatchSelector(Frame):
         self.change_wdg_state(self.STOP)
         self.lbl_last_break.configure(text=f'{LAST_BREAK_TEXT}{datetime.datetime.now().strftime(TIME_VIEW_FORMAT)}')
 
-        if self.counting:
-            self.counting = False
+        self.counting = False
 
     def sw_insert(self, widget, text: str):
         widget.configure(state=NORMAL)
@@ -179,20 +175,18 @@ class StopWatchSelector(Frame):
 
         return self.data
 
-    def count_time(self, widget, thread_num: int):
+    def count_time(self, widget):
+        if not self.counting:
+            return
+
         secs = time_to_sec(widget.get())
-        while self.counting:
-            time.sleep(1)
-            secs += 1
-            minutes = str((secs // 60) % 60).rjust(2, '0')
-            hours = str(secs // 3600).rjust(2, '0')
 
-            self.sw_insert(widget, f'{hours}:{minutes}:{str(secs % 60).rjust(2, '0')}')
+        secs += 1
+        minutes = str((secs // 60) % 60).rjust(2, '0')
+        hours = str(secs // 3600).rjust(2, '0')
 
-        if thread_num == 1:
-            self.thread_2.join()
-        else:
-            self.thread_1.join()
+        self.sw_insert(widget, f'{hours}:{minutes}:{str(secs % 60).rjust(2, '0')}')
+        self.after(1000, lambda: self.count_time(widget))
 
 
 class DeedsPanel(Frame):

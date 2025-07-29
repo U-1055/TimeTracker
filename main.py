@@ -1,7 +1,7 @@
 import time
-from tkinter import Frame, Button, Tk, Label, BOTH, W, E, N, S
+from tkinter import Frame, Canvas, Tk, Label, BOTH, W, E, N, S
 
-from customtkinter import CTkButton
+from customtkinter import CTkButton, CTkFrame
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from threading import Thread
@@ -14,19 +14,19 @@ from base import (DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME, NAME, FINISH_DAY_TE
 
 class Window(Frame):
     """Основное окно. Содержит логику работы программы"""
+
     def __init__(self, parent, bg):
         super().__init__(master=parent, bg=bg)
         self.saver = Saver()
         self.day_data = self.saver.day_data  # Получение информации о плане
 
-        self.saving = False
         self.place_widgets()  # Размещение виджетов
+
+        self.saving = True
+        self.saving_cycle()
 
         self.wdg_stop_watch.load_deed(self.saver.get_temp_json())  # Загрузка данных в StopWatchSelector
         self.load_to_deeds_panel()  # Загрузка данных в DeedsPanel
-
-        self.saving_thread = Thread(target=self.saving_cycle, daemon=True)  # Запуск цикла сохранения
-        self.saving_thread.start()
 
         if self.saver.in_process():  # temp_json существует? (T.е. день идёт?)
             if not self.saver.compare_plans():
@@ -38,7 +38,7 @@ class Window(Frame):
         self.columnconfigure(1, weight=3)
         self.rowconfigure(0, weight=4)
 
-        wdg_frame = Frame(self, bg=COLOR1)  # основная панель
+        wdg_frame = Canvas(self)  # основная панель
         wdg_frame.grid(row=0, column=0, sticky=W + E + N + S)
 
         wdg_frame.columnconfigure(0, weight=3)
@@ -80,13 +80,13 @@ class Window(Frame):
         self.wdg_stop_watch.load_deeds(tuple(deed[NAME] for deed in self.day_data))
         self.load_to_deeds_panel()
 
-        self.saving = True
+        self._start_saving()
 
     def to_default(self):
         """Сохраняет план, останавливает цикл сохранения, устанавливает виджеты в состояния по умолчанию. Вызывается при
            изменении плана"""
         self.save()
-        self.saving = False
+        self._stop_saving()
         self.wdg_stop_watch.to_default()
         self.deeds_panel.clear_panel()
 
@@ -95,7 +95,7 @@ class Window(Frame):
 
     def finish_day(self):
         """Вызывается при завершении дня"""
-        self.saving = False
+        self._stop_saving()
         self.save()
         self.saver.finish_day()
 
@@ -112,9 +112,18 @@ class Window(Frame):
 
     def saving_cycle(self):
         """Цикл сохранения. Раз в SAVE_CYCLE_TIME сек. сохраняет данные из StopWatchSelector."""
-        while self.saving:
-            time.sleep(SAVE_CYCLE_TIME)
-            self.save()
+        if not self.saving:
+            return
+        print('Saving...')
+        self.save()
+        self.after(SAVE_CYCLE_TIME * 1000, self.saving_cycle)
+
+    def _start_saving(self):
+        self.saving = True
+        self.saving_cycle()
+
+    def _stop_saving(self):
+        self.saving = False
 
     def collapse_window(self):
         """Вызывается при уничтожении виджета через Menu. Останавливает цикл сохранения и сохраняет данные,
@@ -129,7 +138,7 @@ class Window(Frame):
         self.grid(row=0, column=1, sticky=W + E + N + S)
 
 
-class GraphicWindow(Frame):
+class GraphWindow(Frame):
     """Окно с графиком"""
     _timing_data: list[dict]
 
@@ -201,6 +210,7 @@ class GraphicWindow(Frame):
 class Settings(Frame):
     def __init__(self, parent):
         super().__init__(master=parent)
+        self.settings = {}
 
     def collapse_window(self):
         self.grid_forget()
@@ -227,9 +237,11 @@ def launch():
 
     window = Window(master, COLOR2)
     window.grid(row=0, column=1, sticky=W + E + N + S)
-    graphic = GraphicWindow(master)
 
-    menu = Menu(master, window, {'ЧАСЫ': window, 'СТАТ': graphic}, COLOR3)
+    graph = GraphWindow(master)
+    settings = Settings(master)
+
+    menu = Menu(master, window, {'ЧАСЫ': window, 'СТАТ': graph, 'НАСТР': settings}, COLOR3)
     menu.grid(row=0, column=0, sticky=W + E + N + S)
 
     root.iconbitmap('icons\\logo.ico')

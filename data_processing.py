@@ -19,7 +19,7 @@ from base import (time_to_sec, calculate_time, time_to_format, CURRENT_DEED, TIM
                
    main_json: {FACT_TIME: 
                 {<название дела>: {TIME: время (из StopWatchSelector) в секундах}}, 
-                PLAN_TIME: 
+               PLAN_TIME: 
                 {<название дела>:{TIME: время согласно календарю (в секундах), 
                        IGNORING_TIME: игнорируемые отрезки времени в формате HH:MM-HH:MM вида: ['time_start-time_end', ]}}}
 """
@@ -121,6 +121,11 @@ class Saver:
             temp_json_struct = {
                 CURRENT_DEED: CBOX_DEFAULT, TIME_MAIN: DEFAULT_TIME, TIME_DEED: DEFAULT_TIME
             }
+
+            if main_json_path.is_file():
+                temp_json_struct[TIME_MAIN] = time_to_format(self.get_time_main())
+
+
             with open(temp_json_path, 'w') as temp:
                 json.dump(temp_json_struct, temp)
 
@@ -151,6 +156,17 @@ class Saver:
 
         with open(temp_json_path, 'w') as temp:
             json.dump({CURRENT_DEED: deed_name, TIME_MAIN: data[TIME_MAIN], TIME_DEED: data[TIME_DEED]}, temp)
+
+    def get_time_main(self) -> int:
+        """Суммирует время, потраченное на мероприятия в main_json. Возвращает время в секундах."""
+        with open(main_json_path, 'r') as file:
+            main_data = json.load(file)
+
+        result = 0
+        for deed in main_data[FACT_TIME].values():
+            result += int(deed[TIME])
+
+        return result
 
     @staticmethod
     def process_day_data(day_data: list[dict]) -> list[dict]:
