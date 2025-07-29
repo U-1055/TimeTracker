@@ -1,4 +1,5 @@
 import datetime
+import tkinter
 from queue import Queue
 from tkinter import Frame, Label, NORMAL, END, W, E, S, N, TOP, DISABLED, StringVar, Entry
 from tkinter.ttk import Combobox, Button
@@ -399,3 +400,41 @@ class PeriodEntry(CTkEntry):
             return False
 
 
+class ColorFrame(Frame):
+
+    _color_name: str
+    _color: str | None
+
+    def __init__(self, color_name: str, *args, **kwargs):
+        from base import config
+
+        super().__init__(*args, **kwargs)
+        self._color_name = color_name
+
+        if self._color_name in config:
+            self._color = config[self._color_name]
+        else:
+            raise ValueError(f'Unknown color name: {self._color_name}')
+
+        self._place_widgets()
+
+    def _place_widgets(self):
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=2)
+        self.columnconfigure(0, weight=3)
+        self.columnconfigure(1, weight=1)
+
+        color_name = Label(self, text='color_name')  #ToDo: распределить цвета по группам (цвета кнопок и пр.)
+        color_name.grid(row=0, column=0, columnspan=2)
+
+        wdg_color_view = Frame(self, bg=self._color)
+        wdg_color_view.grid(row=1, column=0, sticky=W + E + N + S)
+
+
+    @property
+    def color(self) -> str:
+        return self._color
+
+    @property
+    def color_name(self) -> str:
+        return self._color_name

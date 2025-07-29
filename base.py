@@ -1,38 +1,28 @@
 """Содержит функции и константы"""
 import json
+from tkinter import PhotoImage
 
 from PIL import ImageTk, Image
 from pathlib import Path
 
-#ключи словаря с настройками
 COL_KEY1 = 'color1'
 COL_KEY2 = 'color2'
 COL_KEY3 = 'color3'
 
-COLOR1 = '#C2EDD4'
-COLOR2 = '#A8EDA5'
-COLOR3 = '#B8ED63'
 
 def load_config() -> dict:
     config_path = Path('data', 'settings.json')
-    with open(config_path, 'w') as file:
-        json.dump(
-            {
-                'COLOR1': COLOR1,
-                'COLOR2': COLOR2,
-                'COLOR3': COLOR3,
-                'IMAGE_PATH': None
-            },
-            file
-        )
+    with open(config_path, 'rb') as file:
+        return json.load(file)
 
 
 config = load_config()
+IMAGE_PATH = 'image_path'
 
 # Цвета
-COLOR1 = '#C2EDD4'
-COLOR2 = '#A8EDA5'
-COLOR3 = '#B8ED63'
+COLOR1 = config[COL_KEY1]
+COLOR2 = config[COL_KEY2]
+COLOR3 = config[COL_KEY3]
 BLACK = 'Black'
 RED = "#FF290D"
 IGNORING_COLOR = "#DBDBDB"
@@ -90,6 +80,7 @@ READONLY = 'readonly'  # константа состояния виджета tk
 PERMISSIBLE_PERCENT = 80  # минимально допустимый процент выполнения плана
 DATE_FORMAT = "%d.%m.%y"  # формат дат, используемых в программе (для datetime.strftime/strptime)
 TIME_VIEW_FORMAT = "%H:%M:%S"  # отображаемый формат времени (на 02.07 используется в StopWatchSelector.lbl_last_break)
+
 
 def calculate_time(time1: str, time2: str) -> int:
     """Вычисляет разницу (в секундах) между двумя временными метками в формате hh:mm. time1 < time2.

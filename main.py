@@ -6,7 +6,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from threading import Thread
 
-from widgets import StopWatchSelector, DeedsPanel, Menu, PeriodEntry
+from widgets import StopWatchSelector, DeedsPanel, Menu, PeriodEntry, ColorFrame
 from data_processing import Saver, TimingDataHandler
 from base import (DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME, NAME, FINISH_DAY_TEXT, COLOR1, COLOR3, COLOR2,
                   CHANGE_PLAN_TEXT, PERMISSIBLE_PERCENT, LBL_PERIOD_SELECT_TEXT, RED, SAVE_TEXT)
@@ -211,6 +211,20 @@ class Settings(Frame):
     def __init__(self, parent):
         super().__init__(master=parent)
         self.settings = {}
+
+        COLOR2 = 'Black'
+
+        self._place_widgets()
+    def _place_widgets(self):
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.columnconfigure(2, weight=1)
+
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+
+        color1 = ColorFrame(master=self, color_name='color1')
+        color1.grid(row=0)
 
     def collapse_window(self):
         self.grid_forget()
