@@ -9,7 +9,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from base import (time_to_sec, calculate_time, time_to_format, CURRENT_DEED, TIME, TIME_MAIN, TIME_DEED, PLAN_TIME,
                   FACT_TIME, NAME, CBOX_DEFAULT, TIME_START, TIME_END, HTTP_ERROR, SERVER_NOT_FOUND_ERROR, IGNORING_TIME,
-                  DEFAULT_TIME, DATE_FORMAT)
+                  DEFAULT_TIME, DATE_FORMAT, IGN_DEEDS, CAL_ID)
 
 """
 Структура json'ов: 
@@ -31,6 +31,7 @@ temp_json = 'temp.json'
 main_json = f'{datetime.date.today().strftime(DATE_FORMAT)}.json'
 temp_json_path = pathlib.Path(PATH, temp_json)
 main_json_path = pathlib.Path(PATH, DAYS, main_json)
+settings_path = pathlib.Path(PATH, 'settings.json')
 
 
 class APIProcessor:
@@ -44,7 +45,6 @@ class APIProcessor:
 
     START_TIME = "startTime"
     TIME_ZONE = "Asia/Novosibirsk"
-    CAL_ID = "filatov_truba@mail.ru"
 
     #Ключи словаря, возвращаемого API
 
@@ -54,19 +54,20 @@ class APIProcessor:
     END = 'end'
     DATE_TIME = 'dateTime'
 
-    def __init__(self):
+    def __init__(self, calendar_id: str):
+        self._calendar_id = calendar_id
         credentials = service_account.Credentials.from_service_account_file(self.FILE_PATH, scopes=self.SCOPES)
         self.service = build('calendar', 'v3', credentials=credentials)
 
-    def send_request(self) -> list[dict]:
+    def send_request(self) -> list[dict] | bool:
         """Отправляет запрос к Google Calendar API. Возвращает результат запроса"""
         today = datetime.date.today()
         time_min = datetime.datetime(year=today.year, month=today.month, day=today.day, hour=0, minute=0, # 00:00:00 текущего дня
                                      tzinfo=ZoneInfo(self.TIME_ZONE)).isoformat('T')
         time_max = datetime.datetime(year=today.year, month=today.month, day=today.day, hour=23, minute=59, #23:59:00 текущего дня
                                      tzinfo=ZoneInfo(self.TIME_ZONE)).isoformat('T')
+        day_data = self.service.events().list(calendarId=self._calendar_id, timeMin=time_min, timeMax=time_max, orderBy=self.START_TIME, singleEvents=True).execute()
 
-        day_data = self.service.events().list(calendarId=self.CAL_ID, timeMin=time_min, timeMax=time_max, orderBy=self.START_TIME, singleEvents=True).execute()
         return self.process(day_data)
 
     def process(self, data_: dict) -> list[dict]:
@@ -95,12 +96,7 @@ class APIProcessor:
         return plan_struct
 
     def get_data(self) -> list[dict]:
-        try:
-            return self.send_request()
-        except HttpError as error:
-            print(f"{HTTP_ERROR}: \n{error}")
-        except ServerNotFoundError as server_error:
-            print(f"{SERVER_NOT_FOUND_ERROR}: \n{server_error}")
+        return self.send_request()
 
 
 class Saver:
@@ -111,9 +107,30 @@ class Saver:
     LATER = 'later'
 
     def __init__(self):
-        self.api_processor = APIProcessor()
-        self.day_data = self.get_plan()
-        self.create_jsons()
+        try:
+            self.api_processor = APIProcessor(calendar_id=self.get_calendar_id())
+            self.day_data = self.get_plan()
+            self._ignoring_deeds = self.get_ignoring_deeds()
+
+            self.create_jsons()
+        except HttpError as error:
+            raise error
+
+        except ServerNotFoundError:
+            print('Сервер не найден')
+
+    @staticmethod
+    def get_ignoring_deeds():
+        with open(settings_path, 'rb') as settings_file:
+            settings = json.load(settings_file)
+
+        return settings[IGN_DEEDS]
+
+    @staticmethod
+    def get_calendar_id():
+        with open(settings_path, 'rb') as settings_file:
+            settings = json.load(settings_file)
+        return settings[CAL_ID]
 
     def create_jsons(self):
         """Создаёт temp_json и/или main_json (при отсутствии одного или обоих из них)."""
@@ -124,7 +141,6 @@ class Saver:
 
             if main_json_path.is_file():
                 temp_json_struct[TIME_MAIN] = time_to_format(self.get_time_main())
-
 
             with open(temp_json_path, 'w') as temp:
                 json.dump(temp_json_struct, temp)
@@ -278,10 +294,13 @@ class Saver:
             json.dump(deeds_data, main_)
 
     @staticmethod
-    def get_deed_state(time_start: str, time_end) -> int:
+    def get_deed_state(time_start: str, time_end: str, deed_name: str) -> int:
         """Вызывается из Deed при запуске. Возвращает состояние changing_btn в Deed, если f"{time_start}-{time_end}" есть в
-           IGNORING_TIME - 1, если нет - 0."""
+           IGNORING_TIME (или если deed_name в настройках отмечен как игнорируемый) - 1, если нет - 0."""
         time_view = f'{time_start}-{time_end}'
+
+        if deed_name in Saver.get_ignoring_deeds():
+            return 1
 
         with open(main_json_path, 'rb') as main_:
             deeds_data = json.load(main_)
@@ -305,8 +324,7 @@ class Saver:
             saved_data[deed_key] = {TIME: saved_plan[PLAN_TIME][deed_key][TIME]}
         return api_data == saved_data
 
-    @staticmethod
-    def process_to_plan(data_: list[dict]) -> dict:
+    def process_to_plan(self, data_: list[dict]) -> dict:
         """
         Обрабатывает данные от process_day_data в словарь для ключа PLAN_TIME main_json.
         Пример:
@@ -316,10 +334,11 @@ class Saver:
         deeds_data = {}
         for deed in data_:
             deeds_data[deed[NAME]] = {TIME: deed[TIME], IGNORING_TIME: []}
+            if deed in self._ignoring_deeds:
+                pass
         return deeds_data
 
-    @staticmethod
-    def process_to_fact(data_: list[dict]) -> dict:
+    def process_to_fact(self, data_: list[dict]) -> dict:
         """
         Обрабатывает данные от process_day_data в словарь для ключа FACT_TIME main_json.
         Пример:
@@ -330,6 +349,27 @@ class Saver:
         for deed in data_:
             deeds_data[deed[NAME]] = {TIME: '0'}
         return deeds_data
+
+    @staticmethod
+    def add_ignore_deed(deed: str):
+        with open(settings_path, 'rb') as settings_file:
+            settings = json.load(settings_file)
+
+        settings[IGN_DEEDS].append(deed)
+
+        with open(settings_path, 'w') as settings_file:
+            json.dump(settings, settings_file)
+
+    @staticmethod
+    def del_ignore_deed(deed: str):
+        with open(settings_path, 'rb') as settings_file:
+            settings = json.load(settings_file)
+
+        if deed in settings:
+            settings[IGN_DEEDS].remove(deed)
+
+        with open(settings_path, 'w') as settings_file:
+            json.dump(settings, settings_file)
 
     def get_temp_json(self) -> dict:
         """Возвращает temp_json"""

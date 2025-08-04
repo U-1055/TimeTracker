@@ -5,9 +5,12 @@ from tkinter import PhotoImage
 from PIL import ImageTk, Image
 from pathlib import Path
 
-COL_KEY1 = 'color1'
-COL_KEY2 = 'color2'
-COL_KEY3 = 'color3'
+COL_KEY1 = 'frm_col1'
+COL_KEY2 = 'frm_col2'
+COL_KEY3 = 'btn_col'
+
+IGN_DEEDS = 'ignoring_deeds'
+CAL_ID = 'calendar_id'
 
 
 def load_config() -> dict:
@@ -20,15 +23,19 @@ config = load_config()
 IMAGE_PATH = 'image_path'
 
 # Цвета
-COLOR1 = config[COL_KEY1]
-COLOR2 = config[COL_KEY2]
-COLOR3 = config[COL_KEY3]
+FRM_COL1 = config[COL_KEY1]
+FRM_COL2 = config[COL_KEY2]
+BTN_COL = config[COL_KEY3]
+TEXT_COL = config['text_color']
+WARNING_COL = config['warning_color']
+
 BLACK = 'Black'
 RED = "#FF290D"
 IGNORING_COLOR = "#DBDBDB"
 IGNORING_TEXT_COLOR = "#2B2B2B"
-DEED_COLOR1 = "#377D22"
-DEED_COLOR2 = "#FF7646"
+DEED_COLOR1 = config['deed_color1']
+DEED_COLOR2 = config['deed_color2']
+
 
 # Шрифты
 HEADER_FONT = ('Arial', 12, 'bold')

@@ -1,27 +1,28 @@
 import datetime
 import tkinter
+import typing
 from queue import Queue
-from tkinter import Frame, Label, NORMAL, END, W, E, S, N, TOP, DISABLED, StringVar, Entry
-from tkinter.ttk import Combobox, Button
+from tkinter import Frame, Label, Button, NORMAL, END, W, E, S, N, TOP, DISABLED, StringVar, Entry
+import tkinter.ttk as ttk
 from customtkinter import CTkEntry, CTkButton, CTkSwitch, CTkFrame, CTkProgressBar
 
 import time
 from threading import Thread
 import re
 
-from base import (COLOR1, COLOR3, COMMON_FONT, DAY_ROWS, MINS_IN_ROW, CBOX_DEFAULT, START_TEXT, STOP_TEXT, COMMON_FONT_COLOR, CURRENT_DEED,
+from base import (FRM_COL1, BTN_COL, COMMON_FONT, DAY_ROWS, MINS_IN_ROW, CBOX_DEFAULT, START_TEXT, STOP_TEXT, COMMON_FONT_COLOR, CURRENT_DEED,
                   IGNORING_COLOR, IGNORING_TEXT_COLOR, IGNORING_TEXT, TIME_MAIN, TIME_DEED, NAME, TIME_START, TIME_END,
                   TIME, READONLY, DEFAULT_TIME, time_to_sec, rm_insignificant_zeros, LAST_BREAK_TEXT, TIME_VIEW_FORMAT,
-                  DATE_FORMAT, HEADER_FONT, COLOR2)
+                  DATE_FORMAT, HEADER_FONT, FRM_COL2)
 
 
-class ComboBox(Combobox):
+class ComboBox(ttk.Combobox):
     """Обёртка для CTKCombobox. Обрабатывает список входных значений (values)"""
     def __init__(self, parent, state: str = NORMAL):
         super().__init__(master=parent, state=READONLY, font=HEADER_FONT)
         self.set(CBOX_DEFAULT)
 
-    def process_values(self, values: tuple) -> list:
+    def process_values(self, values: tuple | list) -> list:
         """Удаляет из кортежа входящих значений дубликаты элементов. Пример: ("name", "name") -> ["name"] """
         output_values = []
         for value in values:
@@ -195,7 +196,7 @@ class DeedsPanel(Frame):
     deeds: list
 
     def __init__(self, parent, change_saver, state_checker):
-        super().__init__(master=parent, highlightthickness=3, highlightbackground=COLOR3)
+        super().__init__(master=parent, highlightthickness=3, highlightbackground=FRM_COL2)
         self.change_saver = change_saver
         self.state_checker = state_checker
 
@@ -220,7 +221,7 @@ class DeedsPanel(Frame):
             if i % 4 == 0:
                 bg = "Black"
             else:
-                bg = COLOR3
+                bg = BTN_COL
             mark = Frame(self, bg=bg)
             mark.grid(row=i, column=1, sticky=W + E)
 
@@ -274,7 +275,7 @@ class Deed(Frame):
         self.text_color = text_color
 
         self.place_widgets()
-        state = state_checker(time_start, time_end)
+        state = state_checker(time_start, time_end, deed_name)
 
         if state:  # Проверка на игнорирование дела
             self.changing_btn.select()
@@ -315,20 +316,24 @@ class Deed(Frame):
 
 
 class Menu(Frame):
-    """Класс меню. parent - родительский виджет, window_now - окно, размещённой в момент создания экземпляра, switch_data -
-       словарь вида {<название окна>: <экземпляр класса окна>}. Каждый экзмепляр класса окна должен иметь методы collapse_window
-       и place_window (1-й отвечает за уничтожение виджета, 2-й - за размещение)."""
+    """
+    Класс меню. parent - родительский виджет, window_now - окно, размещённой в момент создания экземпляра, switch_data -
+    словарь вида {<название окна>: <экземпляр класса окна>}. Каждый экзмепляр класса окна должен иметь методы collapse_window
+    и place_window (1-й отвечает за уничтожение виджета, 2-й - за размещение).
+    """
 
-    def __init__(self, parent, window_now, switch_data: dict, bg):  # Параметры кнопок
+    def __init__(self, parent: tkinter.Widget, window_now: tkinter.Widget, switch_data: dict, bg: str, btn_bg: str):
         super().__init__(master=parent, bg=bg)
         self.switch_data = switch_data
         self.window_now = window_now
+        self._btn_bg = btn_bg
         self._place_widgets()
 
     def _place_widgets(self):
         for row, window_name in enumerate(self.switch_data.keys()):
             switching_window = self.switch_data[window_name]
-            btn = Button(self, text=window_name, command=lambda window=switching_window: self._change_window(window))
+            btn = Button(self, relief="flat", overrelief="ridge", bg=self._btn_bg, activebackground=self._btn_bg, cursor='hand2', text=window_name,
+                         command=lambda window=switching_window: self._change_window(window))
             btn.grid(row=row, column=0, sticky=W + E)
 
     def _change_window(self, switching_window):
@@ -340,9 +345,15 @@ class Menu(Frame):
         switching_window.place_window()
         self.window_now = switching_window  # Обновление window_now
 
+    def change_window(self, window_num: int):
+        """Переключает окно по его номеру. Предназначен для вызова за пределами класса."""
+        if window_num >= len(self.switch_data):
+            return
+        self._change_window()
+
 
 class DialogWindow(Frame):
-    def __init__(self, master, text: str, args: list, command=None):
+    def __init__(self, master, text: str, btn_text: str, args: list = None, command=None):
         super().__init__(master=master)
         self.args = args
         self.command = command
@@ -350,13 +361,17 @@ class DialogWindow(Frame):
         lbl = Label(self, text=text)
         lbl.grid(row=0, column=0, columnspan=3)
 
-        btn = CTkButton(self, text='OK', command=self.action)
+        btn = CTkButton(self, text=btn_text, command=self.action)
         btn.grid(row=0, column=1)
 
     def action(self):
         """Вызывается при нажатии на кнопку"""
         if self.command is not None:
-            self.command(self.args)
+            if self.args is None:
+                self.command()
+            else:
+                self.command(self.args)
+
         self.destroy()
 
 
@@ -424,17 +439,83 @@ class ColorFrame(Frame):
         self.columnconfigure(0, weight=3)
         self.columnconfigure(1, weight=1)
 
-        color_name = Label(self, text='color_name')  #ToDo: распределить цвета по группам (цвета кнопок и пр.)
+        color_name = Label(self, text='color_name')
         color_name.grid(row=0, column=0, columnspan=2)
 
         wdg_color_view = Frame(self, bg=self._color)
         wdg_color_view.grid(row=1, column=0, sticky=W + E + N + S)
 
 
-    @property
-    def color(self) -> str:
-        return self._color
+class ComboBoxAdd(Frame):
+    """
+    Combobox с возможностью удаления и добавления элементов.
 
-    @property
-    def color_name(self) -> str:
-        return self._color_name
+    :param save_func: функция сохранения, должна принимать один аргумент - добавляемое значение
+    :param del_func: функция удаления, должна принимать один аргумент - удаляемое значение
+    :param values: кортеж/список значений виджета
+    """
+
+    def __init__(self, *args, bg: str = 'White', save_func: typing.Callable = None, del_func: typing.Callable = None, values: tuple | list, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+
+        self._save_func = save_func
+        self._del_func = del_func
+
+        self._combobox = ttk.Combobox(self, values=values)
+        self._combobox.grid(row=0, column=0, columnspan=2, sticky=W + E)
+
+        self._window_del = DialogWindow(self, text='', btn_text='Удалить', args=[], command=self._del_value)
+
+        btn_add = Button(self, text='Добавить', relief='flat', bg=bg, command=self._add_value)
+        btn_add.grid(row=1, column=0, sticky=W + E)
+
+        btn_del = Button(self, text='Удалить', relief='flat', bg=bg, command=self._del_value)
+        btn_del.grid(row=1, column=1, sticky=W + E)
+
+    def _add_value(self):
+        values = list(self._combobox.cget('values'))
+        new_value = self._combobox.get()
+
+        if new_value not in values and new_value != '':
+            values.append(new_value)
+            self._combobox.configure(values=values)
+            if self._save_func is not None:
+                self._save_func(new_value)
+            self._combobox.delete(0, END)
+
+    def _del_value(self):
+        value = self._combobox.get()
+        values = list(self._combobox.cget('values'))
+
+        if value in values:
+            values.remove(value)
+            self._combobox.configure(values=values)
+            if self._del_func is not None:
+                self._del_func(value)
+            self._combobox.delete(0, END)
+
+
+class AllowingEntry(Entry):
+    """Entry с кнопками подтверждения ввода нового значения и ввода значения по умолчанию."""
+
+    def __init__(self, default_value: str = '', *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=4)
+        self.columnconfigure(1, weight=1)
+        self.columnconfigure(2, weight=1)
+
+        self._entry = Entry(self)
+        self._entry.grid(row=0, column=0)
+        self._entry.insert(0, default_value)
+
+        btn_confirm = Button(self, text='conf')
+        btn_confirm.grid(row=0, column=1)
+
+        btn_to_default = Button(self, text='def')
+        btn_to_default.grid(row=0, column=2)
+

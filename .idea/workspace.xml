@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Переделан отсчёт времени и цикл сохранения. Устранена возможность утечки памяти. Сделаны мелкие улучшения: расчёт TIME_MAIN через TIME каждого мероприятия при запуске программы с отсутствующим temp_json,">
+    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Начал делать настройки">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/widgets.py" beforeDir="false" afterPath="$PROJECT_DIR$/widgets.py" afterDir="false" />
     </list>
@@ -281,7 +282,15 @@
       <option name="project" value="LOCAL" />
       <updated>1753762970595</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="Начал делать настройки">
+      <option name="closed" value="true" />
+      <created>1753769269436</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1753769269436</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -319,7 +328,8 @@
     <MESSAGE value="Начал работу с тестами" />
     <MESSAGE value="Написал тест для Saver (обработка данных с APIProcessor, обработка processed_data в main_json)&#10;Сделал несколько небольших исправлений. Сделал несколько небольших улучшений GUI." />
     <MESSAGE value="Переделан отсчёт времени и цикл сохранения. Устранена возможность утечки памяти. Сделаны мелкие улучшения: расчёт TIME_MAIN через TIME каждого мероприятия при запуске программы с отсутствующим temp_json," />
-    <option name="LAST_COMMIT_MESSAGE" value="Переделан отсчёт времени и цикл сохранения. Устранена возможность утечки памяти. Сделаны мелкие улучшения: расчёт TIME_MAIN через TIME каждого мероприятия при запуске программы с отсутствующим temp_json," />
+    <MESSAGE value="Начал делать настройки" />
+    <option name="LAST_COMMIT_MESSAGE" value="Начал делать настройки" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -328,6 +338,36 @@
           <url>file://$PROJECT_DIR$/tests.py</url>
           <line>97</line>
           <option name="timeStamp" value="75" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/widgets.py</url>
+          <line>358</line>
+          <option name="timeStamp" value="76" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/widgets.py</url>
+          <line>364</line>
+          <option name="timeStamp" value="77" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/widgets.py</url>
+          <line>368</line>
+          <option name="timeStamp" value="78" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/widgets.py</url>
+          <line>475</line>
+          <option name="timeStamp" value="79" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>24</line>
+          <option name="timeStamp" value="81" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>22</line>
+          <option name="timeStamp" value="82" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
