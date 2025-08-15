@@ -17,7 +17,7 @@ from base import (FRM_COL1, BTN_COL, COMMON_FONT, DAY_ROWS, MINS_IN_ROW, CBOX_DE
 
 
 class ComboBox(ttk.Combobox):
-    """Обёртка для CTKCombobox. Обрабатывает список входных значений (values)"""
+    """Обёртка для ttk.Combobox. Обрабатывает список входных значений (values)"""
     def __init__(self, parent, state: str = NORMAL):
         super().__init__(master=parent, state=READONLY, font=HEADER_FONT)
         self.set(CBOX_DEFAULT)
@@ -181,6 +181,8 @@ class StopWatchSelector(Frame):
         if not self.counting:
             return
 
+        self.after(1000, lambda: self.count_time(widget))
+
         secs = time_to_sec(widget.get())
 
         secs += 1
@@ -188,7 +190,6 @@ class StopWatchSelector(Frame):
         hours = str(secs // 3600).rjust(2, '0')
 
         self.sw_insert(widget, f'{hours}:{minutes}:{str(secs % 60).rjust(2, '0')}')
-        self.after(1000, lambda: self.count_time(widget))
 
 
 class DeedsPanel(Frame):

@@ -8,6 +8,7 @@ from pathlib import Path
 COL_KEY1 = 'frm_col1'
 COL_KEY2 = 'frm_col2'
 COL_KEY3 = 'btn_col'
+COL_KEY4 = 'btn_hover_col'
 
 IGN_DEEDS = 'ignoring_deeds'
 CAL_ID = 'calendar_id'
@@ -26,6 +27,7 @@ IMAGE_PATH = 'image_path'
 FRM_COL1 = config[COL_KEY1]
 FRM_COL2 = config[COL_KEY2]
 BTN_COL = config[COL_KEY3]
+BTN_HOV_COL = config[COL_KEY4]
 TEXT_COL = config['text_color']
 WARNING_COL = config['warning_color']
 

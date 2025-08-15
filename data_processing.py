@@ -62,9 +62,9 @@ class APIProcessor:
     def send_request(self) -> list[dict] | bool:
         """Отправляет запрос к Google Calendar API. Возвращает результат запроса"""
         today = datetime.date.today()
-        time_min = datetime.datetime(year=today.year, month=today.month, day=today.day, hour=0, minute=0, # 00:00:00 текущего дня
+        time_min = datetime.datetime(year=today.year, month=today.month, day=today.day - 3, hour=0, minute=0, # 00:00:00 текущего дня
                                      tzinfo=ZoneInfo(self.TIME_ZONE)).isoformat('T')
-        time_max = datetime.datetime(year=today.year, month=today.month, day=today.day, hour=23, minute=59, #23:59:00 текущего дня
+        time_max = datetime.datetime(year=today.year, month=today.month, day=today.day - 3, hour=23, minute=59, #23:59:00 текущего дня
                                      tzinfo=ZoneInfo(self.TIME_ZONE)).isoformat('T')
         day_data = self.service.events().list(calendarId=self._calendar_id, timeMin=time_min, timeMax=time_max, orderBy=self.START_TIME, singleEvents=True).execute()
 
@@ -192,7 +192,6 @@ class Saver:
 
         def rm_last_day():
             """Удаляет дела, начатые ранее 00:00 текущего дня"""
-
             deed = day_data[0]
             next_deed = day_data[1]
             if time_to_sec(deed[TIME_START]) > time_to_sec(next_deed[TIME_START]):
@@ -204,7 +203,8 @@ class Saver:
 
         names = []
         indexes = []
-        rm_last_day()
+        if len(day_data) > 1:
+            rm_last_day()
         day_data = rm_deeds(indexes, day_data)
         indexes = []  # Очистить индексы, чтобы не удалить лишнее при втором вызове rm_deeds
         deeds = [{NAME: deed[NAME], TIME: calculate_time(deed[TIME_START], deed[TIME_END])} for deed in day_data]

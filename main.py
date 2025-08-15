@@ -11,7 +11,7 @@ from googleapiclient.errors import HttpError
 from widgets import StopWatchSelector, DeedsPanel, Menu, PeriodEntry, ColorFrame, ComboBoxAdd, DialogWindow
 from data_processing import Saver, TimingDataHandler
 from base import (DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME, NAME, FINISH_DAY_TEXT, FRM_COL1, FRM_COL2, BTN_COL,
-                  CHANGE_PLAN_TEXT, PERMISSIBLE_PERCENT, LBL_PERIOD_SELECT_TEXT, RED, SAVE_TEXT, TEXT_COL, WARNING_COL)
+                  CHANGE_PLAN_TEXT, PERMISSIBLE_PERCENT, LBL_PERIOD_SELECT_TEXT, RED, SAVE_TEXT, TEXT_COL, WARNING_COL, BTN_HOV_COL)
 
 
 class Window(Frame):
