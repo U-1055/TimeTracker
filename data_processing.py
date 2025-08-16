@@ -62,9 +62,9 @@ class APIProcessor:
     def send_request(self) -> list[dict] | bool:
         """Отправляет запрос к Google Calendar API. Возвращает результат запроса"""
         today = datetime.date.today()
-        time_min = datetime.datetime(year=today.year, month=today.month, day=today.day - 3, hour=0, minute=0, # 00:00:00 текущего дня
+        time_min = datetime.datetime(year=today.year, month=today.month, day=today.day, hour=0, minute=0, # 00:00:00 текущего дня
                                      tzinfo=ZoneInfo(self.TIME_ZONE)).isoformat('T')
-        time_max = datetime.datetime(year=today.year, month=today.month, day=today.day - 3, hour=23, minute=59, #23:59:00 текущего дня
+        time_max = datetime.datetime(year=today.year, month=today.month, day=today.day, hour=23, minute=59, #23:59:00 текущего дня
                                      tzinfo=ZoneInfo(self.TIME_ZONE)).isoformat('T')
         day_data = self.service.events().list(calendarId=self._calendar_id, timeMin=time_min, timeMax=time_max, orderBy=self.START_TIME, singleEvents=True).execute()
 
@@ -101,7 +101,6 @@ class APIProcessor:
 
 class Saver:
     day_data: list[dict]
-
     # Константы для определения положения временной метки по отношению к другой временной метке
     EARLIER = 'earlier'
     LATER = 'later'
@@ -367,6 +366,16 @@ class Saver:
 
         if deed in settings:
             settings[IGN_DEEDS].remove(deed)
+
+        with open(settings_path, 'w') as settings_file:
+            json.dump(settings, settings_file)
+
+    @staticmethod
+    def change_calendar_id(id_: str):
+        with open(settings_path, 'rb') as settings_file:
+            settings = json.load(settings_file)
+
+        settings[CAL_ID] = id_
 
         with open(settings_path, 'w') as settings_file:
             json.dump(settings, settings_file)

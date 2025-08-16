@@ -1,34 +1,43 @@
 import time
 import tkinter
-from tkinter import Frame, Canvas, LabelFrame, Tk, Entry, Label, BOTH, W, E, N, S
+from tkinter import Frame, Canvas, LabelFrame, Tk, Entry, Label, BOTH, W, E, N, S, CENTER
 from tkinter.messagebox import showerror
+import typing as tp
 
 from customtkinter import CTkButton, CTkFrame
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from googleapiclient.errors import HttpError
+from tk_tools import Calendar
 
-from widgets import StopWatchSelector, DeedsPanel, Menu, PeriodEntry, ColorFrame, ComboBoxAdd, DialogWindow
+from widgets import StopWatchSelector, DeedsPanel, Menu, PeriodEntry, ComboBoxAdd, DialogInput, AllowingEntry
 from data_processing import Saver, TimingDataHandler
 from base import (DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME, NAME, FINISH_DAY_TEXT, FRM_COL1, FRM_COL2, BTN_COL,
-                  CHANGE_PLAN_TEXT, PERMISSIBLE_PERCENT, LBL_PERIOD_SELECT_TEXT, RED, SAVE_TEXT, TEXT_COL, WARNING_COL, BTN_HOV_COL)
+                  CHANGE_PLAN_TEXT, PERMISSIBLE_PERCENT, LBL_PERIOD_SELECT_TEXT, RED, SAVE_TEXT, TEXT_COL, WARNING_COL,
+                  BTN_HOV_COL, CAL_ID_ERR_LBL, CAL_ID_ERR_TITLE, CAL_ID_ERR_MSG)
+from support_classes import SwitchableWidget
 
 
-class Window(Frame):
+class Window(Frame, SwitchableWidget):
     """Основное окно. Содержит логику работы программы"""
+    saver: Saver
 
-    def __init__(self, parent: tkinter.Widget, bg):
+    def __init__(self, parent: tkinter.Widget, bg: str, saver: type, restart_func: tp.Callable):
         super().__init__(master=parent, bg=bg)
+        self._restart_func = restart_func
         try:
-            self.saver = Saver()
+            self.saver = saver()
         except HttpError:
+            self.saver = saver
             self.day_data = []
             self.saving = False
-            showerror('Ошибка при обращении к календарю', 'Возможно, вы указали неверный идентификатор календаря. Перейдите в настройки и измените его')
+            dialog_input = DialogInput(self, title=CAL_ID_ERR_TITLE, message=CAL_ID_ERR_MSG, label=CAL_ID_ERR_LBL,
+                        default_text=saver.get_calendar_id(), confirm_command=self._restart)
+            dialog_input.grid()
+
             return
 
         self.day_data = self.saver.day_data  # Получение информации о плане
-
         self.place_widgets()  # Размещение виджетов
 
         self.saving = True
@@ -55,7 +64,7 @@ class Window(Frame):
         wdg_frame.columnconfigure(2, weight=1)
         wdg_frame.rowconfigure(0, weight=1)
 
-        finish_btn = CTkButton(wdg_frame, text=FINISH_DAY_TEXT, fg_color=RED, text_color=TEXT_COL, command=self.finish_day)
+        finish_btn = CTkButton(wdg_frame, text=FINISH_DAY_TEXT, fg_color=RED, text_color=TEXT_COL, hover=False, command=self.finish_day)
         finish_btn.grid(row=2, column=4)
 
         self.wdg_stop_watch = StopWatchSelector(wdg_frame, self.saver.get_deed)  # секундомер
@@ -66,10 +75,10 @@ class Window(Frame):
         self.deeds_panel = DeedsPanel(self, self.saver.change_ignoring_time, self.saver.get_deed_state)
         self.deeds_panel.grid(row=0, column=1, sticky=W + E + N + S)
 
-        save_btn = CTkButton(wdg_frame, text=SAVE_TEXT, fg_color=BTN_COL, command=self.save)
+        save_btn = CTkButton(wdg_frame, text=SAVE_TEXT, fg_color=BTN_COL, text_color=TEXT_COL, hover_color=BTN_HOV_COL, command=self.save)
         save_btn.grid(row=0, column=2, sticky=N)
 
-        change_btn = CTkButton(wdg_frame, text=CHANGE_PLAN_TEXT, fg_color=BTN_COL, command=self.change_plan)
+        change_btn = CTkButton(wdg_frame, text=CHANGE_PLAN_TEXT, fg_color=BTN_COL, text_color=TEXT_COL, hover_color=BTN_HOV_COL, command=self.change_plan)
         change_btn.grid(row=2, column=3)
 
     def check_changing(self):
@@ -134,6 +143,11 @@ class Window(Frame):
     def _stop_saving(self):
         self.saving = False
 
+    def _restart(self, id_):
+        """Изменяет calendar id и перезапускает приложение"""
+        self.saver.change_calendar_id(id_)
+        self._restart_func()
+
     def collapse_window(self):
         """Вызывается при уничтожении виджета через Menu. Останавливает цикл сохранения и сохраняет данные,
            после чего уничтожает виджет."""
@@ -148,37 +162,36 @@ class Window(Frame):
         self.grid(row=0, column=1, sticky=W + E + N + S)
 
 
-class GraphWindow(Frame):
+class GraphWindow(Frame, SwitchableWidget):
     """Окно с графиком"""
     _timing_data: list[dict]
 
-    def __init__(self, parent):
+    def __init__(self, parent, timing_data_handler):
         super().__init__(master=parent)
         self._timing_data = [{}]
         self.graph_built = False
+        self._timing_data_handler = timing_data_handler
         self._place_widgets()
 
     def _place_widgets(self):
         self.rowconfigure(1, weight=8)
-        self.columnconfigure(1, weight=1)
+        self.columnconfigure(1, weight=2)
+        self.columnconfigure(0, weight=6)
 
-        lbl_period = Label(self, text=LBL_PERIOD_SELECT_TEXT)
-        lbl_period.grid(row=0, column=0, sticky=W)
-
-        self.wdg_period_selector = PeriodEntry(self)
+        self.wdg_period_selector = Calendar(self)
         self.wdg_period_selector.grid(row=0, column=1, sticky=W)
 
-        graph_build_btn = CTkButton(self, text='Построить график', command=self._take_data)
+        graph_build_btn = CTkButton(self, text='Построить график', fg_color=BTN_COL, hover_color=BTN_HOV_COL, text_color=TEXT_COL, command=self._take_data)
         graph_build_btn.grid(row=0, column=2, sticky=W)
 
         self.graph_frm = Frame(self, bg=FRM_COL1)
-        self.graph_frm.grid(row=1, column=0, sticky=W + E + N + S, columnspan=3)
+        self.graph_frm.grid(row=1, column=0, sticky=W + E + N + S,)
 
     def _take_data(self):
         """Получает данные о соответствии плану и инициирует построение графика"""
         dates = self.wdg_period_selector.get_dates()
         if dates:
-            timing_handler = TimingDataHandler(dates)
+            timing_handler = self._timing_data_handler(dates)
             if self.graph_built:
                 self._delete_graph()
             self._build_graph(timing_handler.plan_data)
@@ -217,10 +230,11 @@ class GraphWindow(Frame):
         self.grid(row=0, column=1, sticky=W + E + N + S)
 
 
-class Settings(Frame):
-    def __init__(self, parent):
+class Settings(Frame, SwitchableWidget):
+    def __init__(self, parent, saver):
         super().__init__(master=parent)
         self.settings = {}
+        self._saver = saver
         self._themes = {"dark_theme": {"frm_col1": '#262626'}}
         self._place_widgets()
 
@@ -244,9 +258,9 @@ class Settings(Frame):
         frm_other_settings = LabelFrame(self, bg=FRM_COL2, highlightthickness=0, text='Другое')
         frm_other_settings.grid(row=0, column=2)
 
-        wdg_calendar_id = Entry(frm_other_settings, bg=BTN_COL, fg=TEXT_COL)
+        calendar_id = Saver.get_calendar_id()
+        wdg_calendar_id = AllowingEntry(frm_other_settings, bg=BTN_COL, fg=TEXT_COL, default_value=calendar_id, confirm_callback=Saver.change_calendar_id)
         wdg_calendar_id.grid(row=0, column=0)
-        wdg_calendar_id.insert(0, Saver.get_calendar_id())
 
     def collapse_window(self):
         self.grid_forget()
@@ -271,17 +285,22 @@ def launch():
     master.columnconfigure(1, weight=15)
     master.rowconfigure(0, weight=1)
 
-    window = Window(master, FRM_COL2)
+    window = Window(master, FRM_COL2, Saver, lambda: restart(root))
     window.grid(row=0, column=1, sticky=W + E + N + S)
 
-    graph = GraphWindow(master)
-    settings = Settings(master)
+    graph = GraphWindow(master, TimingDataHandler)
+    settings = Settings(master, Saver)
 
     menu = Menu(master, window, {'ЧАСЫ': window, 'СТАТ': graph, 'НАСТР': settings}, FRM_COL2, BTN_COL)
     menu.grid(row=0, column=0, sticky=W + E + N + S)
 
     root.iconbitmap('icons\\logo.ico')
     root.mainloop()
+
+
+def restart(root: Tk):
+    root.destroy()
+    launch()
 
 
 if __name__ == '__main__':

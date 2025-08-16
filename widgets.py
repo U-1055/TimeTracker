@@ -1,10 +1,12 @@
 import datetime
 import tkinter
-import typing
+import typing as tp
 from queue import Queue
-from tkinter import Frame, Label, Button, NORMAL, END, W, E, S, N, TOP, DISABLED, StringVar, Entry
+from tkinter import Frame, Label, Button, NORMAL, END, W, E, S, N, TOP, DISABLED, StringVar, Entry, Text
 import tkinter.ttk as ttk
+
 from customtkinter import CTkEntry, CTkButton, CTkSwitch, CTkFrame, CTkProgressBar
+from tk_tools import Calendar
 
 import time
 from threading import Thread
@@ -14,6 +16,7 @@ from base import (FRM_COL1, BTN_COL, COMMON_FONT, DAY_ROWS, MINS_IN_ROW, CBOX_DE
                   IGNORING_COLOR, IGNORING_TEXT_COLOR, IGNORING_TEXT, TIME_MAIN, TIME_DEED, NAME, TIME_START, TIME_END,
                   TIME, READONLY, DEFAULT_TIME, time_to_sec, rm_insignificant_zeros, LAST_BREAK_TEXT, TIME_VIEW_FORMAT,
                   DATE_FORMAT, HEADER_FONT, FRM_COL2)
+from support_classes import SwitchableWidget
 
 
 class ComboBox(ttk.Combobox):
@@ -323,7 +326,7 @@ class Menu(Frame):
     и place_window (1-й отвечает за уничтожение виджета, 2-й - за размещение).
     """
 
-    def __init__(self, parent: tkinter.Widget, window_now: tkinter.Widget, switch_data: dict, bg: str, btn_bg: str):
+    def __init__(self, parent: tkinter.Widget, window_now: SwitchableWidget, switch_data: dict, bg: str, btn_bg: str):
         super().__init__(master=parent, bg=bg)
         self.switch_data = switch_data
         self.window_now = window_now
@@ -338,7 +341,9 @@ class Menu(Frame):
             btn.grid(row=row, column=0, sticky=W + E)
 
     def _change_window(self, switching_window):
-        """Переключает текущее окно на заданное в параметре switching_window. Для каждой кнопки на панели Menu он свой."""
+        """
+        Переключает текущее окно на заданное в параметре switching_window. Для каждой кнопки на панели Menu он свой.
+        """
         if self.window_now == switching_window:  # проверка на то, является ли переключаемое окно текущим
             return
 
@@ -350,7 +355,7 @@ class Menu(Frame):
         """Переключает окно по его номеру. Предназначен для вызова за пределами класса."""
         if window_num >= len(self.switch_data):
             return
-        self._change_window()
+        self._change_window(list(self.switch_data.keys())[window_num])
 
 
 class DialogWindow(Frame):
@@ -377,7 +382,10 @@ class DialogWindow(Frame):
 
 
 class PeriodEntry(CTkEntry):
-    """Модифицированный tkinter.Entry с валидацией, пропускающей только цифры 0-9, точку (.) и дефис (-). Имеет текст по умолчанию."""
+    """
+    Модифицированный tkinter.Entry с валидацией, пропускающей только цифры 0-9, точку (.) и дефис (-).
+    Имеет текст по умолчанию.
+    """
     DEFAULT_TEXT = 'dd.mm.yy-dd.mm.yy'
     ALLOWED_CHARS = ('.', '-')
     EXPR_FOR_RANGE = '^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.([0-9]{2})-(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.([0-9]{2})$'
@@ -447,6 +455,34 @@ class ColorFrame(Frame):
         wdg_color_view.grid(row=1, column=0, sticky=W + E + N + S)
 
 
+class SmartButton(Button):
+    _tooltip: None | tkinter.Widget
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._tooltip = None
+
+    def set_tooltip(self, text: str = f'{Button.__name__}', time_: int = 1000):
+        if self._tooltip:
+            self._tooltip = Label(self, text=text)
+            self.bind('<Enter>', lambda event: self._init_tooltip(event, time_))
+
+    def _init_tooltip(self, event, time_: int):
+        call = self.after(time_, lambda: self._show_tooltip(event.x, event.y))
+        self.bind('<Leave>', lambda _: self.after_cancel(call))
+
+    def _show_tooltip(self, x: int, y: int):
+        self._tooltip.place(x=x, y=y)
+        self.bind('<Leave>', self._hide_tooltip)
+
+    def _hide_tooltip(self, event):
+        self._tooltip.destroy()
+        self.bind('<Enter>', )
+
+    def _del_tooltip(self):
+        self._tooltip = None
+
+
 class ComboBoxAdd(Frame):
     """
     Combobox с возможностью удаления и добавления элементов.
@@ -456,8 +492,9 @@ class ComboBoxAdd(Frame):
     :param values: кортеж/список значений виджета
     """
 
-    def __init__(self, *args, bg: str = 'White', save_func: typing.Callable = None, del_func: typing.Callable = None, values: tuple | list, **kwargs):
+    def __init__(self, *args, bg: str = 'White', save_func: tp.Callable = None, del_func: tp.Callable = None, values: tuple | list, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
         self.columnconfigure(0, weight=1)
@@ -500,23 +537,151 @@ class ComboBoxAdd(Frame):
             self._combobox.delete(0, END)
 
 
-class AllowingEntry(Entry):
-    """Entry с кнопками подтверждения ввода нового значения и ввода значения по умолчанию."""
+class AllowingEntry(Frame):
+    """
+    Entry с кнопками подтверждения ввода нового значения и ввода значения по умолчанию.
+    :param default_value: значение по умолчанию
+    :param confirm_callback: вызываемый объект, принимающий 1 аргумент - текст виджета.
 
-    def __init__(self, default_value: str = '', *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    """
+
+    def __init__(self, *args, bg: str = 'White', fg: str = 'Black', default_value: str = '', confirm_callback: tp.Callable = lambda _: None):
+        super().__init__(*args, bg=bg)
+        self._default_value = default_value
+        self._confirm_callback = confirm_callback
+
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=4)
         self.columnconfigure(1, weight=1)
         self.columnconfigure(2, weight=1)
 
-        self._entry = Entry(self)
+        self._entry = Entry(self, bg=bg, fg=fg)
         self._entry.grid(row=0, column=0)
-        self._entry.insert(0, default_value)
+        self._entry.insert(0, self._default_value)
 
-        btn_confirm = Button(self, text='conf')
+        btn_confirm = Button(self, text='conf', relief='flat', cursor='hand2', command=self._confirm)
         btn_confirm.grid(row=0, column=1)
 
-        btn_to_default = Button(self, text='def')
+        btn_to_default = Button(self, text='reset', relief='flat', cursor='hand2', command=self._reset)
         btn_to_default.grid(row=0, column=2)
 
+    def _confirm(self):
+        self.focus_set()
+        self._confirm_callback(self._entry.get())
+
+    def _reset(self):
+        self._entry.delete(0, END)
+        self._entry.insert(0, self._default_value)
+
+
+class DialogInput(Frame):
+
+    _title: str
+    _message: str
+    _label: str
+    _confirm_command: tp.Callable
+    _default_text: str
+    _confirm_btn_text: str
+
+    def __init__(self,
+                 master: None | tkinter.Widget = None,
+                 title: str = '',
+                 message: str = '',
+                 label: str = '',
+                 default_text: str = '',
+                 confirm_btn_text: str = 'OK',
+                 confirm_command: tp.Callable = lambda _: None):
+        super().__init__(master)
+        self._title = title
+        self._message = message
+        self._label = label
+        self._default_text = default_text
+        self._confirm_btn_text = confirm_btn_text
+        self._confirm_command = confirm_command
+
+        self._place_widgets()
+
+    def _place_widgets(self):
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=3)
+        self.rowconfigure(2, weight=1)
+        self.columnconfigure(0, weight=4)
+        self.columnconfigure(1, weight=4)
+        self.columnconfigure(2, weight=1)
+
+        wdg_title = Label(self, text=self._title, font=('Arial', 14), relief='flat', cursor='ibeam')
+        wdg_title.grid(row=0, column=0, columnspan=3, sticky=W + E + N + S)
+
+        wdg_message = Text(self, font=('Arial', 12), relief='flat')
+        wdg_message.grid(row=1, column=0, columnspan=3, sticky=W + E)
+        wdg_message.insert(1.0, self._message)
+        wdg_message.configure(state='disabled')
+
+        wdg_label = Label(self, text=self._label, font=('Arial', 12), relief="flat")
+        wdg_label.grid(row=2, column=0)
+
+        self._wdg_entry = Entry(self)
+        self._wdg_entry.insert(0, self._default_text)
+        self._wdg_entry.grid(row=2, column=1)
+
+        btn_confirm = Button(self, relief="flat", cursor="hand2", text=self._confirm_btn_text, command=self._confirm)
+        btn_confirm.grid(row=2, column=2)
+
+    def _confirm(self):
+        text = self._wdg_entry.get()
+        self.destroy()
+        self._confirm_command(text)
+
+
+class PeriodCalendar(Frame):
+    """Надстройка над tk_tools.groups.Calendar, позволяющая выбрать диапазон дат"""
+
+    def __init__(self, master: tkinter.Widget):
+        super().__init__(master)
+        self._calendar = Calendar(self, callback=self._set_first_point)
+        self._first_point = None
+        self._second_point = None
+
+    def _place_widgets(self):
+        self.rowconfigure(0, weight=2)
+        self.rowconfigure(1, weight=1)
+
+        self._period_view = Label(self)
+        self._period_view.grid(row=1, column=0)
+
+    def _set_first_point(self):
+        if self._second_point is not None:
+            self._second_point = None
+
+        self._calendar.callback = self._set_second_point
+        self._first_point = self._calendar.selection
+        self._period_view.configure(text=f'{self._first_point}')
+
+    def _set_second_point(self):
+        self._calendar.callback = self._set_first_point
+        self._second_point = self._calendar.selection
+        self._period_view.configure(text=f'{self._first_point} - {self._second_point}')
+    def get(self) -> tuple[str, ...]:
+        if self._first_point is not None and self._second_point is not None:
+            return self._first_point, self._second_point
+
+    def get_dates(self) -> list[str] | None:
+        """Возвращает список дат из выбранного пользователем диапазона. Если диапазон не выбран, возвращает None"""
+        range_ = self.get()
+
+        if range_ is None:
+            return
+
+        start_date, end_date = range_
+        start_date = datetime.datetime.strptime(start_date, DATE_FORMAT)
+        end_date = datetime.datetime.strptime(end_date, DATE_FORMAT)
+
+        start_date = min(start_date, end_date)
+        end_date = max(start_date, end_date)
+
+        dates = []
+        delta = end_date - start_date
+        for day in range(delta.days + 1):
+            date_ = start_date + datetime.timedelta(day)
+            dates.append(str(date_.strftime("%d.%m.%y")))
+        return dates

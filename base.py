@@ -81,6 +81,11 @@ PLAN_TIME = "plan_time"
 FACT_TIME = "fact_time"
 IGNORING_TIME = "ignoring_time"
 
+# Тексты ошибок
+CAL_ID_ERR_TITLE = 'Ошибка при обращении к Google Calendar'
+CAL_ID_ERR_MSG = 'Возможно вы указали неверный идентификатор календаря. Измените его в поле ниже.'
+CAL_ID_ERR_LBL = 'Измените идентификатор:'
+
 # Прочее
 MINS_IN_ROW = 15  # количество минут в одной строчке на панели дня DeedsPanel
 DAY_ROWS = 97  # количество строчек на панели дня в DeedsPanel. 1 строчка - 15 мин.
