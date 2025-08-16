@@ -4,17 +4,16 @@ from tkinter import Frame, Canvas, LabelFrame, Tk, Entry, Label, BOTH, W, E, N, 
 from tkinter.messagebox import showerror
 import typing as tp
 
-from customtkinter import CTkButton, CTkFrame
+from customtkinter import CTkButton, CTkSwitch
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from googleapiclient.errors import HttpError
-from tk_tools import Calendar
 
-from widgets import StopWatchSelector, DeedsPanel, Menu, PeriodEntry, ComboBoxAdd, DialogInput, AllowingEntry
+from widgets import StopWatchSelector, DeedsPanel, Menu, PeriodCalendar, ComboBoxAdd, DialogInput, AllowingEntry
 from data_processing import Saver, TimingDataHandler
 from base import (DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME, NAME, FINISH_DAY_TEXT, FRM_COL1, FRM_COL2, BTN_COL,
-                  CHANGE_PLAN_TEXT, PERMISSIBLE_PERCENT, LBL_PERIOD_SELECT_TEXT, RED, SAVE_TEXT, TEXT_COL, WARNING_COL,
-                  BTN_HOV_COL, CAL_ID_ERR_LBL, CAL_ID_ERR_TITLE, CAL_ID_ERR_MSG)
+                  CHANGE_PLAN_TEXT, PERMISSIBLE_PERCENT, RED, SAVE_TEXT, TEXT_COL,
+                  BTN_HOV_COL, CAL_ID_ERR_LBL, CAL_ID_ERR_TITLE, CAL_ID_ERR_MSG, MEAN_COMPLIANCE, MEAN_TIME, ALL_TIME, INFO)
 from support_classes import SwitchableWidget
 
 
@@ -165,27 +164,34 @@ class Window(Frame, SwitchableWidget):
 class GraphWindow(Frame, SwitchableWidget):
     """Окно с графиком"""
     _timing_data: list[dict]
+    _build_in_window: bool
 
     def __init__(self, parent, timing_data_handler):
-        super().__init__(master=parent)
+        super().__init__(master=parent, bg=FRM_COL1)
         self._timing_data = [{}]
         self.graph_built = False
         self._timing_data_handler = timing_data_handler
+        self._build_in_window = False
         self._place_widgets()
 
     def _place_widgets(self):
-        self.rowconfigure(1, weight=8)
-        self.columnconfigure(1, weight=2)
-        self.columnconfigure(0, weight=6)
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+        self.rowconfigure(2, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.columnconfigure(0, weight=20)
 
-        self.wdg_period_selector = Calendar(self)
-        self.wdg_period_selector.grid(row=0, column=1, sticky=W)
+        self.wdg_period_selector = PeriodCalendar(self)
+        self.wdg_period_selector.grid(row=0, column=1, sticky=W + E + S)
 
         graph_build_btn = CTkButton(self, text='Построить график', fg_color=BTN_COL, hover_color=BTN_HOV_COL, text_color=TEXT_COL, command=self._take_data)
-        graph_build_btn.grid(row=0, column=2, sticky=W)
+        graph_build_btn.grid(row=1, column=1, sticky=N + W + E)
+
+        info_frm = LabelFrame(self, text='Инфо', fg=FRM_COL1)
+        info_frm.grid(row=2, column=1)
 
         self.graph_frm = Frame(self, bg=FRM_COL1)
-        self.graph_frm.grid(row=1, column=0, sticky=W + E + N + S,)
+        self.graph_frm.grid(row=0, column=0, rowspan=2, sticky=W + E + N + S)
 
     def _take_data(self):
         """Получает данные о соответствии плану и инициирует построение графика"""
@@ -203,14 +209,14 @@ class GraphWindow(Frame, SwitchableWidget):
         """
         self.graph_built = True
         dates = list(plan_data.keys())
-        percents = [(int(accordance)) for accordance in plan_data.values()]
+        percents = [(int(plan_data[key])) for key in plan_data if key != INFO]
 
         figure = Figure(figsize=(5, 5))
         plot = figure.add_subplot(111)
         plot.grid()
         plot.axline(xy1=(0, PERMISSIBLE_PERCENT), slope=0, color='r')
         plot.set_ylim(bottom=0, top=100)
-        plot.set_yticks((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100))
+        plot.set_yticks([i for i in range(0, 101, 5)])
         plot.plot(dates, percents, marker='o', linestyle='dashed')
 
         graph_view = FigureCanvasTkAgg(figure, self.graph_frm)

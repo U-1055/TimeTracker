@@ -81,6 +81,12 @@ PLAN_TIME = "plan_time"
 FACT_TIME = "fact_time"
 IGNORING_TIME = "ignoring_time"
 
+# ключи словаря от TimingDataHandler
+ALL_TIME = 'all_time'
+MEAN_TIME = 'mean_time'
+MEAN_COMPLIANCE = 'mean_compliance'
+INFO = 'info'
+
 # Тексты ошибок
 CAL_ID_ERR_TITLE = 'Ошибка при обращении к Google Calendar'
 CAL_ID_ERR_MSG = 'Возможно вы указали неверный идентификатор календаря. Измените его в поле ниже.'

@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Исправлен баг с вылетом, если дел меньше 2-х">
-      <change afterPath="$PROJECT_DIR$/support_classes.py" afterDir="false" />
+    <list default="true" id="a1b20ed2-2464-4d5b-985e-3f3f9fba9c4e" name="Changes" comment="Добавлена обработка ошибки при неверном calendar id">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/base.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/support_classes.py" beforeDir="false" afterPath="$PROJECT_DIR$/support_classes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/widgets.py" beforeDir="false" afterPath="$PROJECT_DIR$/widgets.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -307,7 +307,15 @@
       <option name="project" value="LOCAL" />
       <updated>1755228359108</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="Добавлена обработка ошибки при неверном calendar id">
+      <option name="closed" value="true" />
+      <created>1755328110277</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1755328110277</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -322,7 +330,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Делался секундомер" />
     <MESSAGE value="Сделано:                       1) Панель плана             2) Адаптивность             3) Пересмотрена структура трекера (см. ТЖ)              4) Заглушки на места обработчика данных с API и окно графиков" />
     <MESSAGE value="Сделано:&#10;1) Продумана система сохранения&#10;2) Переделаны StopWatch и Combobox&#10;3) Начата система сохранения: создание JSON'ов при запуске и сохранение из StopWatch" />
     <MESSAGE value="Сделано:&#10;1) Доделана система сохранения: реализован цикл сохранения, сохранение данных в JSON'ы, загрузка при запуске&#10;2) Обработан случай окончания мероприятия на следующий день (на уровне DeedsPanel)" />
@@ -347,7 +354,8 @@
     <MESSAGE value="Начал делать настройки" />
     <MESSAGE value="Сделано добавление игнорируемых дел в настройках." />
     <MESSAGE value="Исправлен баг с вылетом, если дел меньше 2-х" />
-    <option name="LAST_COMMIT_MESSAGE" value="Исправлен баг с вылетом, если дел меньше 2-х" />
+    <MESSAGE value="Добавлена обработка ошибки при неверном calendar id" />
+    <option name="LAST_COMMIT_MESSAGE" value="Добавлена обработка ошибки при неверном calendar id" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -374,23 +382,28 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>31</line>
+          <line>30</line>
           <option name="timeStamp" value="81" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>28</line>
+          <line>27</line>
           <option name="timeStamp" value="82" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>34</line>
+          <line>33</line>
           <option name="timeStamp" value="83" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/widgets.py</url>
           <line>598</line>
           <option name="timeStamp" value="84" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/widgets.py</url>
+          <line>709</line>
+          <option name="timeStamp" value="86" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

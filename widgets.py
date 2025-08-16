@@ -638,41 +638,62 @@ class PeriodCalendar(Frame):
 
     def __init__(self, master: tkinter.Widget):
         super().__init__(master)
-        self._calendar = Calendar(self, callback=self._set_first_point)
         self._first_point = None
         self._second_point = None
+        self._place_widgets()
 
     def _place_widgets(self):
         self.rowconfigure(0, weight=2)
         self.rowconfigure(1, weight=1)
 
+        self._calendar = Calendar(self, callback=self._set_first_point)
+        self._calendar.grid(row=0, column=0, sticky=W + E + N + S)
+
         self._period_view = Label(self)
-        self._period_view.grid(row=1, column=0)
+        self._period_view.grid(row=1, column=0, sticky=W + E)
 
     def _set_first_point(self):
         if self._second_point is not None:
             self._second_point = None
 
         self._calendar.callback = self._set_second_point
-        self._first_point = self._calendar.selection
+        self._first_point = self.selection
         self._period_view.configure(text=f'{self._first_point}')
 
     def _set_second_point(self):
         self._calendar.callback = self._set_first_point
-        self._second_point = self._calendar.selection
+        self._second_point = self.selection
+        if self._second_point < self._first_point:  # Если вторая точка раньше первой, они меняются местами
+            temp = self._first_point
+            self._first_point = self._second_point
+            self._second_point = temp
+
         self._period_view.configure(text=f'{self._first_point} - {self._second_point}')
-    def get(self) -> tuple[str, ...]:
+
+    @property
+    def selection(self):
+        return self._calendar.selection.date().strftime('%d.%m.%y')
+
+    def get(self) -> tuple[datetime, datetime] | tuple[datetime]:
         if self._first_point is not None and self._second_point is not None:
             return self._first_point, self._second_point
+        if self._first_point is not None:
+            return (self._first_point, )
 
-    def get_dates(self) -> list[str] | None:
+    def get_dates(self) -> list[datetime] | None:
         """Возвращает список дат из выбранного пользователем диапазона. Если диапазон не выбран, возвращает None"""
         range_ = self.get()
 
         if range_ is None:
-            return
+            return None
 
-        start_date, end_date = range_
+        if len(range_) == 1:  # Если выбрана одна дата - она возвращается
+            return list(range_)
+        else:
+            assert len(range_) == 2, f'len(range_) = {len(range_)}'
+            assert None not in range_
+            start_date, end_date = range_
+
         start_date = datetime.datetime.strptime(start_date, DATE_FORMAT)
         end_date = datetime.datetime.strptime(end_date, DATE_FORMAT)
 
@@ -681,7 +702,9 @@ class PeriodCalendar(Frame):
 
         dates = []
         delta = end_date - start_date
+
         for day in range(delta.days + 1):
             date_ = start_date + datetime.timedelta(day)
             dates.append(str(date_.strftime("%d.%m.%y")))
+
         return dates
