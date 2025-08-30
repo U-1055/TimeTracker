@@ -2,7 +2,7 @@ import datetime
 import tkinter
 import typing as tp
 from queue import Queue
-from tkinter import Frame, Label, Button, NORMAL, END, W, E, S, N, TOP, DISABLED, StringVar, Entry, Text
+from tkinter import Frame, Label, Button, NORMAL, END, W, E, S, N, TOP, DISABLED, StringVar, Entry, Text, Toplevel
 import tkinter.ttk as ttk
 
 from customtkinter import CTkEntry, CTkButton, CTkSwitch, CTkFrame, CTkProgressBar
@@ -574,7 +574,7 @@ class AllowingEntry(Frame):
         self._entry.insert(0, self._default_value)
 
 
-class DialogInput(Frame):
+class DialogInput(Toplevel):
 
     _title: str
     _message: str
@@ -690,8 +690,6 @@ class PeriodCalendar(Frame):
         if len(range_) == 1:  # Если выбрана одна дата - она возвращается
             return list(range_)
         else:
-            assert len(range_) == 2, f'len(range_) = {len(range_)}'
-            assert None not in range_
             start_date, end_date = range_
 
         start_date = datetime.datetime.strptime(start_date, DATE_FORMAT)
@@ -708,3 +706,37 @@ class PeriodCalendar(Frame):
             dates.append(str(date_.strftime("%d.%m.%y")))
 
         return dates
+
+
+class FormWidget(Frame):
+    """Простейший виджет формы."""
+    _writeable: bool
+    _rows: int
+
+    def __init__(self, master: tkinter.Widget, writeable: bool = True, bg: str = 'White'):
+        super().__init__(master, bg=bg)
+        self._writeable = writeable
+        self._rows = 0
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+
+    def add_row(self, name: str, content: str):
+        """
+        Добавляет строку в форму.
+        :param name: название метки (label) строки
+        :param content: содержание строки (если не writeable)
+        """
+        self.rowconfigure(self._rows, weight=1)
+        lbl = Label(self, text=name)
+        lbl.grid(row=self._rows, column=0, sticky=W + E + N + S)
+
+        if self._writeable:
+            form_widget = Entry(self)
+        else:
+            form_widget = Label(self, text=content)
+        form_widget.grid(row=self._rows, column=1, sticky=W + E + N + S)
+        self._rows += 1
+    def clear(self):
+        for widget in self.winfo_children():
+            widget.destroy()
+

@@ -82,15 +82,26 @@ FACT_TIME = "fact_time"
 IGNORING_TIME = "ignoring_time"
 
 # ключи словаря от TimingDataHandler
-ALL_TIME = 'all_time'
-MEAN_TIME = 'mean_time'
+ALL_P_TIME = 'all_plan_time'
+MEAN_P_TIME = 'mean_plan_time'
+ALL_F_TIME = 'all_fact_time'
+MEAN_F_TIME = 'mean_fact_time'
 MEAN_COMPLIANCE = 'mean_compliance'
+NAMES_DICT = {ALL_P_TIME: 'Общее запланированное время',  # Словарь названий для GUI
+              ALL_F_TIME: 'Общее рабочее время',
+              MEAN_P_TIME: 'Среднее запланированное время',
+              MEAN_F_TIME: 'Среднее рабочее время',
+              MEAN_COMPLIANCE: 'Среднее соответствие плану'
+              }
 INFO = 'info'
 
 # Тексты ошибок
 CAL_ID_ERR_TITLE = 'Ошибка при обращении к Google Calendar'
 CAL_ID_ERR_MSG = 'Возможно вы указали неверный идентификатор календаря. Измените его в поле ниже.'
 CAL_ID_ERR_LBL = 'Измените идентификатор:'
+
+PLOT_ERR_TITLE = 'Ошибка: отсутствуют данные по выбранным датам'
+NO_DATES_ERR_MSG = 'Отсутствуют данные по выбранным датам'
 
 # Прочее
 MINS_IN_ROW = 15  # количество минут в одной строчке на панели дня DeedsPanel
@@ -137,7 +148,7 @@ def time_to_sec(time_f: str) -> int:
     return result
 
 
-def time_to_format(time_sec: int) -> str:
+def time_to_format(time_sec: int | float) -> str:
     """Переводит время из секунд в формат hh:mm:ss"""
     hours = str(time_sec // 3600).rjust(2, '0')  # Добавление незначащих нулей
     minutes = str((time_sec // 60) % 60).rjust(2, '0')

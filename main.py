@@ -1,19 +1,18 @@
 import time
 import tkinter
-from tkinter import Frame, Canvas, LabelFrame, Tk, Entry, Label, BOTH, W, E, N, S, CENTER
+from tkinter import Frame, Canvas, LabelFrame, Tk, Entry, Label, BOTH, W, E, N, S, CENTER, END
 from tkinter.messagebox import showerror
 import typing as tp
+from tkinter.ttk import Treeview
 
 from customtkinter import CTkButton, CTkSwitch
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from googleapiclient.errors import HttpError
 
-from widgets import StopWatchSelector, DeedsPanel, Menu, PeriodCalendar, ComboBoxAdd, DialogInput, AllowingEntry
+from widgets import StopWatchSelector, DeedsPanel, Menu, PeriodCalendar, ComboBoxAdd, DialogInput, AllowingEntry, FormWidget
 from data_processing import Saver, TimingDataHandler
-from base import (DEED_COLOR1, DEED_COLOR2, SAVE_CYCLE_TIME, NAME, FINISH_DAY_TEXT, FRM_COL1, FRM_COL2, BTN_COL,
-                  CHANGE_PLAN_TEXT, PERMISSIBLE_PERCENT, RED, SAVE_TEXT, TEXT_COL,
-                  BTN_HOV_COL, CAL_ID_ERR_LBL, CAL_ID_ERR_TITLE, CAL_ID_ERR_MSG, MEAN_COMPLIANCE, MEAN_TIME, ALL_TIME, INFO)
+import base as const
 from support_classes import SwitchableWidget
 
 
@@ -30,7 +29,7 @@ class Window(Frame, SwitchableWidget):
             self.saver = saver
             self.day_data = []
             self.saving = False
-            dialog_input = DialogInput(self, title=CAL_ID_ERR_TITLE, message=CAL_ID_ERR_MSG, label=CAL_ID_ERR_LBL,
+            dialog_input = DialogInput(self, title=const.CAL_ID_ERR_TITLE, message=const.CAL_ID_ERR_MSG, label=const.CAL_ID_ERR_LBL,
                         default_text=saver.get_calendar_id(), confirm_command=self._restart)
             dialog_input.grid()
 
@@ -55,7 +54,7 @@ class Window(Frame, SwitchableWidget):
         self.columnconfigure(1, weight=3)
         self.rowconfigure(0, weight=4)
 
-        wdg_frame = Canvas(self)  # основная панель
+        wdg_frame = Frame(self)  # основная панель
         wdg_frame.grid(row=0, column=0, sticky=W + E + N + S)
 
         wdg_frame.columnconfigure(0, weight=3)
@@ -63,21 +62,21 @@ class Window(Frame, SwitchableWidget):
         wdg_frame.columnconfigure(2, weight=1)
         wdg_frame.rowconfigure(0, weight=1)
 
-        finish_btn = CTkButton(wdg_frame, text=FINISH_DAY_TEXT, fg_color=RED, text_color=TEXT_COL, hover=False, command=self.finish_day)
+        finish_btn = CTkButton(wdg_frame, text=const.FINISH_DAY_TEXT, fg_color=const.RED, text_color=const.TEXT_COL, hover=False, command=self.finish_day)
         finish_btn.grid(row=2, column=4)
 
         self.wdg_stop_watch = StopWatchSelector(wdg_frame, self.saver.get_deed)  # секундомер
         self.wdg_stop_watch.grid(row=0, column=0, columnspan=2, sticky=W + E + N)
-        self.wdg_stop_watch.load_deeds(tuple(deed[NAME] for deed in self.day_data))
+        self.wdg_stop_watch.load_deeds(tuple(deed[const.NAME] for deed in self.day_data))
 
         # панель с планом
         self.deeds_panel = DeedsPanel(self, self.saver.change_ignoring_time, self.saver.get_deed_state)
         self.deeds_panel.grid(row=0, column=1, sticky=W + E + N + S)
 
-        save_btn = CTkButton(wdg_frame, text=SAVE_TEXT, fg_color=BTN_COL, text_color=TEXT_COL, hover_color=BTN_HOV_COL, command=self.save)
+        save_btn = CTkButton(wdg_frame, text=const.SAVE_TEXT, fg_color=const.BTN_COL, text_color=const.TEXT_COL, hover_color=const.BTN_HOV_COL, command=self.save)
         save_btn.grid(row=0, column=2, sticky=N)
 
-        change_btn = CTkButton(wdg_frame, text=CHANGE_PLAN_TEXT, fg_color=BTN_COL, text_color=TEXT_COL, hover_color=BTN_HOV_COL, command=self.change_plan)
+        change_btn = CTkButton(wdg_frame, text=const.CHANGE_PLAN_TEXT, fg_color=const.BTN_COL, text_color=const.TEXT_COL, hover_color=const.BTN_HOV_COL, command=self.change_plan)
         change_btn.grid(row=2, column=3)
 
     def check_changing(self):
@@ -94,7 +93,7 @@ class Window(Frame, SwitchableWidget):
         self.saver.change_plan()
         self.day_data = self.saver.day_data
         self.wdg_stop_watch.load_deed(self.saver.get_temp_json())
-        self.wdg_stop_watch.load_deeds(tuple(deed[NAME] for deed in self.day_data))
+        self.wdg_stop_watch.load_deeds(tuple(deed[const.NAME] for deed in self.day_data))
         self.load_to_deeds_panel()
 
         self._start_saving()
@@ -121,9 +120,9 @@ class Window(Frame, SwitchableWidget):
 
         for num, deed in enumerate(self.day_data):
             if num % 2 == 0:
-                color = DEED_COLOR2
+                color = const.DEED_COLOR2
             else:
-                color = DEED_COLOR1
+                color = const.DEED_COLOR1
 
             self.deeds_panel.add_deed(deed, color)
 
@@ -133,7 +132,7 @@ class Window(Frame, SwitchableWidget):
             return
 
         self.save()
-        self.after(SAVE_CYCLE_TIME * 1000, self.saving_cycle)
+        self.after(const.SAVE_CYCLE_TIME * 1000, self.saving_cycle)
 
     def _start_saving(self):
         self.saving = True
@@ -167,11 +166,12 @@ class GraphWindow(Frame, SwitchableWidget):
     _build_in_window: bool
 
     def __init__(self, parent, timing_data_handler):
-        super().__init__(master=parent, bg=FRM_COL1)
+        super().__init__(master=parent, bg=const.FRM_COL1)
         self._timing_data = [{}]
         self.graph_built = False
         self._timing_data_handler = timing_data_handler
         self._build_in_window = False
+        self._plan_data = None
         self._place_widgets()
 
     def _place_widgets(self):
@@ -181,52 +181,70 @@ class GraphWindow(Frame, SwitchableWidget):
         self.columnconfigure(1, weight=1)
         self.columnconfigure(0, weight=20)
 
-        self.wdg_period_selector = PeriodCalendar(self)
-        self.wdg_period_selector.grid(row=0, column=1, sticky=W + E + S)
+        self._wdg_period_selector = PeriodCalendar(self)
+        self._wdg_period_selector.grid(row=0, column=1, sticky=N + W + E + S)
 
-        graph_build_btn = CTkButton(self, text='Построить график', fg_color=BTN_COL, hover_color=BTN_HOV_COL, text_color=TEXT_COL, command=self._take_data)
+        graph_build_btn = CTkButton(self, text='Построить график', fg_color=const.BTN_COL, hover_color=const.BTN_HOV_COL,
+                                    text_color=const.TEXT_COL, command=self._build_graph)
         graph_build_btn.grid(row=1, column=1, sticky=N + W + E)
 
-        info_frm = LabelFrame(self, text='Инфо', fg=FRM_COL1)
-        info_frm.grid(row=2, column=1)
+        self._wdg_info = FormWidget(self, writeable=False, bg=const.FRM_COL2)
+        self._wdg_info.grid(row=2, column=1, sticky=W + E + N)
 
-        self.graph_frm = Frame(self, bg=FRM_COL1)
-        self.graph_frm.grid(row=0, column=0, rowspan=2, sticky=W + E + N + S)
+        self._graph_frm = Frame(self, bg=const.FRM_COL1)
+        self._graph_frm.grid(row=0, column=0, rowspan=3, sticky=W + E + N + S)
 
-    def _take_data(self):
-        """Получает данные о соответствии плану и инициирует построение графика"""
-        dates = self.wdg_period_selector.get_dates()
+    def _get_data(self):
+        """Получает данные о соответствии плану за период (из метода get_dates виджета wdg_period_selector)"""
+        dates = self._wdg_period_selector.get_dates()
         if dates:
             timing_handler = self._timing_data_handler(dates)
-            if self.graph_built:
-                self._delete_graph()
-            self._build_graph(timing_handler.plan_data)
+            if len(timing_handler.plan_data) > 1:
+                self._plan_data = timing_handler.plan_data
+            else:
+                tkinter.messagebox.showerror(const.PLOT_ERR_TITLE, const.NO_DATES_ERR_MSG)
 
-    def _build_graph(self, plan_data: dict):
+    def _insert_stat(self):
+        if self._plan_data is None:
+            return
+        for param in self._plan_data[const.INFO]:
+            self._wdg_info.add_row(f'{const.NAMES_DICT[param]}:', self._plan_data[const.INFO][param])
+
+    def _build_graph(self):
         """
         Строит график соответствия плану.
         :param plan_data: словарь вида {<дата вида dd.mm.yy>: <процент соответствия плану>}.
         """
+        self._get_data()
+        if self._plan_data is None:
+            return
+        if self.graph_built:
+            self._delete_graph()
+        self._plot_graph()
+        self._insert_stat()
+
+    def _plot_graph(self):
         self.graph_built = True
-        dates = list(plan_data.keys())
-        percents = [(int(plan_data[key])) for key in plan_data if key != INFO]
+        dates = list(self._plan_data.keys())[1:]
+        percents = [(int(self._plan_data[key])) for key in self._plan_data if key != const.INFO]
 
         figure = Figure(figsize=(5, 5))
         plot = figure.add_subplot(111)
         plot.grid()
-        plot.axline(xy1=(0, PERMISSIBLE_PERCENT), slope=0, color='r')
+        plot.axline(xy1=(0, const.PERMISSIBLE_PERCENT), slope=0, color='r')
         plot.set_ylim(bottom=0, top=100)
-        plot.set_yticks([i for i in range(0, 101, 5)])
+        plot.set_yticks([i for i in range(0, 101, 10)])
         plot.plot(dates, percents, marker='o', linestyle='dashed')
 
-        graph_view = FigureCanvasTkAgg(figure, self.graph_frm)
+        graph_view = FigureCanvasTkAgg(figure, self._graph_frm)
         graph_view.draw()
         graph_view.get_tk_widget().pack(fill=BOTH, expand=True)
 
     def _delete_graph(self):
-        """Удаляет виджет графика (и все другие дочерние виджеты graph_frm)."""
+        """Удаляет виджет графика (и все другие дочерние виджеты graph_frm). Очищает статистику wdg_info"""
         self.graph_built = False
-        for widget in self.graph_frm.winfo_children():
+        self._wdg_info.clear()
+        for widget in self._graph_frm.winfo_children():
             widget.destroy()
 
     def collapse_window(self):
@@ -237,8 +255,8 @@ class GraphWindow(Frame, SwitchableWidget):
 
 
 class Settings(Frame, SwitchableWidget):
-    def __init__(self, parent, saver):
-        super().__init__(master=parent)
+    def __init__(self, parent: tkinter.Widget, saver, bg: str):
+        super().__init__(master=parent, bg=bg)
         self.settings = {}
         self._saver = saver
         self._themes = {"dark_theme": {"frm_col1": '#262626'}}
@@ -247,25 +265,25 @@ class Settings(Frame, SwitchableWidget):
     def _place_widgets(self):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
-        self.columnconfigure(2, weight=1)
+        self.columnconfigure(2, weight=12)
 
         self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
+        self.rowconfigure(1, weight=25)
 
-        frm_color = LabelFrame(self, bg=FRM_COL2, text='Внешний вид')
+        frm_color = LabelFrame(self, bg=const.FRM_COL2, text='Внешний вид')
         frm_color.grid(row=0, column=0)
 
-        frm_ignore_deeds = LabelFrame(self, bg=FRM_COL2, text='Игнорируемые дела')
-        frm_ignore_deeds.grid(row=0, column=1)
+        frm_ignore_deeds = LabelFrame(self, bg=const.FRM_COL2, text='Игнорируемые дела')
+        frm_ignore_deeds.grid(row=0, column=0, sticky=N + W + E + S)
 
-        wdg_ignore_deeds = ComboBoxAdd(frm_ignore_deeds, bg=BTN_COL, save_func=Saver.add_ignore_deed, del_func=Saver.del_ignore_deed, values=Saver.get_ignoring_deeds())
+        wdg_ignore_deeds = ComboBoxAdd(frm_ignore_deeds, bg=const.BTN_COL, save_func=Saver.add_ignore_deed, del_func=Saver.del_ignore_deed, values=Saver.get_ignoring_deeds())
         wdg_ignore_deeds.grid(row=0, column=0, sticky=W + E)
 
-        frm_other_settings = LabelFrame(self, bg=FRM_COL2, highlightthickness=0, text='Другое')
-        frm_other_settings.grid(row=0, column=2)
+        frm_other_settings = LabelFrame(self, bg=const.FRM_COL2, highlightthickness=0, text='Другое')
+        frm_other_settings.grid(row=0, column=1, sticky=N + W + E + S)
 
         calendar_id = Saver.get_calendar_id()
-        wdg_calendar_id = AllowingEntry(frm_other_settings, bg=BTN_COL, fg=TEXT_COL, default_value=calendar_id, confirm_callback=Saver.change_calendar_id)
+        wdg_calendar_id = AllowingEntry(frm_other_settings, bg=const.BTN_COL, fg=const.TEXT_COL, default_value=calendar_id, confirm_callback=Saver.change_calendar_id)
         wdg_calendar_id.grid(row=0, column=0)
 
     def collapse_window(self):
@@ -285,19 +303,19 @@ def launch():
     root.geometry(f'{screen_width // 100 * 60}x{screen_height // 100 * 60}'
                   f'+{screen_width // 100 * 20}+{screen_height // 100 * 20}')
     root.minsize(width=screen_width // 2, height=screen_height // 2)
-    master = Frame(root, bg=FRM_COL1)
+    master = Frame(root, bg=const.FRM_COL1)
     master.pack(fill=BOTH, expand=True)
 
     master.columnconfigure(1, weight=15)
     master.rowconfigure(0, weight=1)
 
-    window = Window(master, FRM_COL2, Saver, lambda: restart(root))
+    window = Window(master, const.FRM_COL2, Saver, lambda: restart(root))
     window.grid(row=0, column=1, sticky=W + E + N + S)
 
     graph = GraphWindow(master, TimingDataHandler)
-    settings = Settings(master, Saver)
+    settings = Settings(master, Saver, const.FRM_COL1)
 
-    menu = Menu(master, window, {'ЧАСЫ': window, 'СТАТ': graph, 'НАСТР': settings}, FRM_COL2, BTN_COL)
+    menu = Menu(master, window, {'ЧАСЫ': window, 'СТАТ': graph, 'НАСТР': settings}, const.FRM_COL2, const.BTN_COL)
     menu.grid(row=0, column=0, sticky=W + E + N + S)
 
     root.iconbitmap('icons\\logo.ico')

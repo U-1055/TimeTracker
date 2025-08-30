@@ -9,7 +9,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from base import (time_to_sec, calculate_time, time_to_format, CURRENT_DEED, TIME, TIME_MAIN, TIME_DEED, PLAN_TIME,
                   FACT_TIME, NAME, CBOX_DEFAULT, TIME_START, TIME_END, HTTP_ERROR, SERVER_NOT_FOUND_ERROR, IGNORING_TIME,
-                  DEFAULT_TIME, DATE_FORMAT, IGN_DEEDS, CAL_ID, ALL_TIME, MEAN_TIME, MEAN_COMPLIANCE)
+                  DEFAULT_TIME, DATE_FORMAT, IGN_DEEDS, CAL_ID, ALL_F_TIME, MEAN_F_TIME, ALL_P_TIME, MEAN_P_TIME, MEAN_COMPLIANCE, INFO)
 
 """
 Структура json'ов: 
@@ -405,12 +405,13 @@ class TimingDataHandler:
     """
 
     plan_data: dict
-    DAYS_PATH = pathlib.Path(PATH, DAYS)
+    DAYS_PATH = pathlib.Path('data', 'days')
 
     def __init__(self, dates: list[str]):
-        self.plan_data = {}
+        self.plan_data = {INFO: {}}
 
-        time_sum = 0
+        time_p_sum = 0
+        time_f_sum = 0
         dates_with_data = 0
         compliance_sum = 0
 
@@ -420,18 +421,26 @@ class TimingDataHandler:
                 deeds_data = self.process_data(deeds_data)
                 self.plan_data[date_] = self.calculate_timing(deeds_data)
 
-                time_sum += self.calculate_time_sum(deeds_data)
-                dates_with_data += 1
+                time_f_sum += self.calculate_time_sum(deeds_data, FACT_TIME)
+                time_p_sum += self.calculate_time_sum(deeds_data, PLAN_TIME)
+
+                if time_f_sum > 0 and time_p_sum > 0:  # Пропуск дней с нулевым временем (чтобы избежать помех в расчётах среднего)
+                    dates_with_data += 1
                 compliance_sum += self.plan_data[date_]
 
-        self.plan_data[ALL_TIME] = time_sum
         if dates_with_data > 0:
-            self.plan_data[MEAN_TIME] = time_sum // dates_with_data
-            self.plan_data[MEAN_COMPLIANCE] = compliance_sum // dates_with_data
+            mean_fact_time = time_f_sum // dates_with_data
+            mean_plan_time = time_p_sum // dates_with_data
+            info_dict = {ALL_F_TIME: f'{time_f_sum // 3600} ч. {time_f_sum % 3600 // 60} мин.',  # общее фактическое время
+                         ALL_P_TIME: f'{time_p_sum // 3600} ч. {time_p_sum % 3600 // 60} мин.',  # общее время плана
+                         MEAN_F_TIME: f'{mean_fact_time // 3600} ч. {mean_fact_time % 3600 // 60} мин.',  # среднее фактическое время за день
+                         MEAN_P_TIME: f'{mean_plan_time // 3600} ч. {mean_plan_time % 3600 // 60} мин.',  # среднее время плана на день
+                         MEAN_COMPLIANCE: f'{round(compliance_sum / dates_with_data, 1)} %'  # среднее соответствие плану
+                         }
         else:
-            self.plan_data[MEAN_TIME] = 0
-            self.plan_data[MEAN_COMPLIANCE] = 0
+            return
 
+        self.plan_data[INFO] = info_dict
 
     def take_data(self, date: str) -> dict | bool:
         """Возвращает данные из main_json'a за день, указанный в date"""
@@ -488,10 +497,14 @@ class TimingDataHandler:
 
         return round(time_sum // deeds, 2)
 
-    def calculate_time_sum(self, deeds_data: dict) -> int:
-        """Вычисляет сумму времени в FACT_TIME"""
+    def calculate_time_sum(self, deeds_data: dict, time_type: str) -> int:
+        """
+        Вычисляет сумму времени в FACT_TIME.
+        :param deeds_data: main_json
+        :param time_type: FACT_TIME или PLAN_TIME
+        """
         time_sum = 0
-        for i, deed in enumerate(deeds_data[FACT_TIME].values()):
+        for i, deed in enumerate(deeds_data[time_type].values()):
             time_sum += int(deed[TIME])
 
         return time_sum
