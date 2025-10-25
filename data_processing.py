@@ -88,10 +88,12 @@ class APIProcessor:
                 name = 'Нет заголовка'
             else:
                 name = deed[self.SUMMARY]
-            plan_struct.append(
-                {NAME: name.strip(),  # Удаляет пробелы
-                 TIME_START: date_to_time(deed[self.START][self.DATE_TIME]),
-                 TIME_END: date_to_time(deed[self.END][self.DATE_TIME])})
+
+            if self.DATE_TIME in deed[self.START] and self.DATE_TIME in deed[self.END]:  # Если дело имеет дату и время начала и окончания (дело не на весь день)
+                plan_struct.append(
+                    {NAME: name.strip(),  # Удаляет пробелы
+                     TIME_START: date_to_time(deed[self.START][self.DATE_TIME]),
+                     TIME_END: date_to_time(deed[self.END][self.DATE_TIME])})
 
         return plan_struct
 
@@ -441,6 +443,9 @@ class TimingDataHandler:
             return
 
         self.plan_data[INFO] = info_dict
+
+    def get_plan_data(self) -> dict:
+        return self.plan_data
 
     def take_data(self, date: str) -> dict | bool:
         """Возвращает данные из main_json'a за день, указанный в date"""
